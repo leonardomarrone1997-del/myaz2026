@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>iAvezzano MVP</title>
+    <meta name="description" content="Guida cittadina per eventi, sconti, nuove aperture, coupon e attivita ad Avezzano." />
+    <meta name="theme-color" content="#f7f8fb" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="iAvezzano" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/app-icon.svg" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navigazione principale">
+        <div class="brand">
+          <div class="brand-mark"><img src="assets/app-icon.svg" alt="iAvezzano" /></div>
+          <div>
+            <strong>iAvezzano</strong>
+            <span>guida cittadina</span>
+          </div>
+        </div>
+
+        <nav class="nav" id="mainNav">
+          <button class="nav-item active" data-view="feed" type="button">O <span>Oggi</span></button>
+          <button class="nav-item" data-view="map" type="button">M <span>Mappa</span></button>
+          <button class="nav-item" data-view="events" type="button">E <span>Eventi</span></button>
+          <button class="nav-item" data-view="coupons" type="button">C <span>Coupon</span></button>
+          <button class="nav-item" data-view="loyalty" type="button">L <span>Fedelta</span></button>
+          <button class="nav-item" data-view="profile" type="button">P <span>Profilo</span></button>
+          <button class="nav-item" data-view="merchant" type="button">B <span>Commerciante</span></button>
+          <button class="nav-item" data-view="admin" type="button">A <span>Admin</span></button>
+        </nav>
+
+        <div class="side-card">
+          <span class="muted">Citta pilota</span>
+          <strong>Avezzano</strong>
+          <p>86 attivita attive, 2.840 utenti registrati, 418 coupon usati.</p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">iAvezzano live</p>
+            <h1 id="pageTitle">Cosa succede ad Avezzano</h1>
+            <p class="topbar-copy">Eventi, sconti, nuove aperture e attivita vicine in un'unica vista cittadina.</p>
+          </div>
+          <div class="top-actions">
+            <label class="search">
+              <span>Search</span>
+              <input id="searchInput" type="search" placeholder="Cerca eventi, sconti, negozi, servizi" />
+            </label>
+            <div class="weather-widget" aria-label="Meteo Avezzano demo">
+              <span class="weather-icon" aria-hidden="true"></span>
+              <div>
+                <strong>22&deg;C</strong>
+                <span>Avezzano - demo</span>
+              </div>
+            </div>
+            <button class="ghost guide-button" data-action="open-onboarding" type="button">Guida</button>
+            <button class="icon-button" data-action="notifications" type="button" title="Notifiche">N</button>
+            <button class="primary-action" id="openSignup" type="button">Entra</button>
+          </div>
+        </header>
+
+        <section class="view active" id="feedView" aria-labelledby="feed">
+          <div class="utility-shell">
+            <section class="utility-column">
+              <div class="home-section-head">
+                <div>
+                  <p class="eyebrow">Oggi in citta</p>
+                  <h2>Le cose utili da sapere</h2>
+                </div>
+                <button class="ghost" data-view-target="events" type="button">Cosa c'e stasera?</button>
+              </div>
+              <div class="stories" id="stories"></div>
+              <section class="feed-list" id="feedList"></section>
+            </section>
+            <aside class="right-rail">
+              <div class="profile-card">
+                <img src="assets/app-icon.svg" alt="iAvezzano" />
+                <div>
+                  <strong>iAvezzano</strong>
+                  <span>La tua guida rapida per vivere Avezzano</span>
+                </div>
+                <button class="ghost compact-button" id="openSignupMini" type="button">Accedi</button>
+              </div>
+              <div class="panel">
+                <div class="panel-head">
+                  <h2>Vicino a te</h2>
+                  <button class="ghost" data-action="filter-nearby" type="button">Filtra</button>
+                </div>
+                <div id="nearbyList" class="compact-list"></div>
+              </div>
+              <div class="panel accent-panel">
+                <p class="eyebrow">Nuova apertura</p>
+                <h2>Bakery Marsica apre sabato</h2>
+                <p>Inaugurazione con degustazione gratuita e coupon benvenuto in app.</p>
+                <button class="light-action" data-view-target="coupons" type="button">Vedi vantaggi</button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="mapView">
+          <div class="map-layout">
+            <div class="map-surface real-map-shell" aria-label="Mappa reale attivita vicine">
+              <div class="map-toolbar">
+                <span class="map-provider-badge">Google style</span>
+                <button class="ghost" id="importRealBusinesses" type="button">Importa attivita reali</button>
+                <button class="ghost" id="useLocation" type="button">Usa posizione</button>
+                <button class="ghost" id="recenterMap" type="button">Centra Avezzano</button>
+                <a class="primary-action map-nav-link" id="navigationLink" href="https://www.google.com/maps/search/?api=1&query=Avezzano" target="_blank" rel="noreferrer">Apri in Google Maps</a>
+              </div>
+              <div id="realMap" class="real-map">
+                <div class="map-fallback">
+                  <strong>Mappa reale di Avezzano</strong>
+                  <span>Caricamento mappa stile Google. Se sei offline, usa l'elenco a destra per aprire Google Maps.</span>
+                </div>
+              </div>
+              <div class="map-card" id="mapCard">
+                <strong>Seleziona una destinazione</strong>
+                <span>Scegli un'attivita dall'elenco o dalla mappa per avviare la navigazione reale.</span>
+              </div>
+              <p class="map-status" id="mapStatus">Mappa centrata su Avezzano. Import automatico attivita reali da OpenStreetMap.</p>
+            </div>
+            <aside class="panel map-panel">
+              <div class="panel-head">
+                <h2>Destinazioni</h2>
+                <span class="pill" id="realBusinessCount">Demo</span>
+              </div>
+              <div id="mapBusinessList" class="business-list"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="eventsView">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Eventi Avezzano</p>
+              <h2>Divertimento, feste, serate e disco</h2>
+            </div>
+            <button class="primary-action" data-action="create-reminder" type="button">Crea reminder</button>
+          </div>
+          <div class="event-categories" id="eventCategories"></div>
+          <div class="tonight-panel">
+            <div>
+              <p class="eyebrow">Cosa c'e questa sera?</p>
+              <h2>Serate consigliate vicino a te</h2>
+              <p>Una selezione rapida per decidere dove andare stasera: aperitivi, feste, musica live e discoteca.</p>
+            </div>
+            <button class="light-action" data-action="create-reminder" type="button">Attiva reminder</button>
+          </div>
+          <div id="tonightGrid" class="tonight-grid"></div>
+          <div class="section-head calendar-head">
+            <div>
+              <p class="eyebrow">Calendario</p>
+              <h2>Prossimi eventi</h2>
+            </div>
+            <button class="ghost" data-action="calendar-month" type="button">Vedi mese</button>
+          </div>
+          <div id="eventsGrid" class="cards-grid"></div>
+        </section>
+
+        <section class="view" id="couponsView">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Portafoglio digitale</p>
+              <h2>Coupon QR e conversioni</h2>
+            </div>
+            <button class="primary-action" data-action="scan-qr" type="button">Scansiona QR</button>
+          </div>
+          <div id="couponsGrid" class="cards-grid"></div>
+        </section>
+
+        <section class="view" id="loyaltyView">
+          <div class="loyalty-hero">
+            <div>
+              <p class="eyebrow">Sistema fedelta</p>
+              <h2>Livello Gold</h2>
+              <p>Hai 1.240 punti. Mancano 260 punti al premio "Cena locale".</p>
+            </div>
+            <div class="progress-ring">
+              <span>83%</span>
+            </div>
+          </div>
+          <div class="cards-grid" id="rewardsGrid"></div>
+        </section>
+
+        <section class="view" id="profileView">
+          <div class="profile-layout">
+            <section class="panel user-profile-card">
+              <div class="profile-cover"></div>
+              <div class="user-identity">
+                <label class="profile-photo" for="profilePhotoInput">
+                  <img id="profileAvatar" src="assets/app-icon.svg" alt="Foto profilo" />
+                  <span>Cambia foto</span>
+                </label>
+                <input id="profilePhotoInput" type="file" accept="image/*" hidden />
+                <div>
+                  <p class="eyebrow">Profilo utente</p>
+                  <h2 id="profileName">Accedi a iAvezzano</h2>
+                  <p id="profileMeta">Crea un account per salvare coupon, eventi e preferenze.</p>
+                </div>
+              </div>
+              <div class="metrics compact profile-metrics">
+                <div><span>Coupon</span><strong id="profileCouponCount">0</strong></div>
+                <div><span>Eventi</span><strong id="profileEventCount">0</strong></div>
+                <div><span>Punti</span><strong id="profilePointCount">0</strong></div>
+                <div><span>Livello</span><strong id="profileLevel">Base</strong></div>
+              </div>
+              <button class="primary-action full-button" id="profileSignupButton" type="button">Registrati o accedi</button>
+            </section>
+
+            <section class="profile-actions-grid">
+              <button class="profile-action-card active" data-profile-panel="settings" type="button">
+                <strong>Impostazioni</strong>
+                <span>Account, privacy e notifiche</span>
+              </button>
+              <button class="profile-action-card" data-view-target="merchant" type="button">
+                <strong>Crea il tuo negozio</strong>
+                <span>Piani da 12,99 EUR/mese</span>
+              </button>
+              <button class="profile-action-card" data-profile-panel="coupons" type="button">
+                <strong>I miei coupon</strong>
+                <span>Sconti salvati e QR</span>
+              </button>
+              <button class="profile-action-card" data-profile-panel="events" type="button">
+                <strong>I miei eventi</strong>
+                <span>Prenotazioni e reminder</span>
+              </button>
+              <button class="profile-action-card" data-profile-panel="preferences" type="button">
+                <strong>Preferenze</strong>
+                <span>Categorie e interessi</span>
+              </button>
+              <button class="profile-action-card" data-view-target="map" type="button">
+                <strong>Luoghi salvati</strong>
+                <span>Attivita e percorsi</span>
+              </button>
+            </section>
+
+            <section class="panel profile-detail-panel">
+              <div class="panel-head">
+                <h2 id="profilePanelTitle">Impostazioni</h2>
+                <span class="pill" id="profilePanelBadge">Account</span>
+              </div>
+              <div id="profilePanelContent"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="merchantView">
+          <div class="merchant-paywall" id="merchantPaywall">
+            <section class="merchant-pricing-hero">
+              <div>
+                <p class="eyebrow">Per commercianti</p>
+                <h2>Crea il tuo negozio su iAvezzano</h2>
+                <p>Pubblica eventi, coupon, nuove aperture, foto e offerte. Tutte le attivita commerciali accedono con un piano a pagamento.</p>
+              </div>
+              <div class="price-badge">
+                <span>da</span>
+                <strong>12,99</strong>
+                <small>EUR/mese</small>
+              </div>
+            </section>
+
+            <section class="pricing-grid">
+              <article class="pricing-card">
+                <p class="eyebrow">Starter</p>
+                <h2>12,99 EUR/mese</h2>
+                <p>Per iniziare con una scheda negozio, posizione in mappa e offerte base.</p>
+                <ul>
+                  <li>Profilo attivita</li>
+                  <li>1 coupon attivo</li>
+                  <li>3 contenuti al mese</li>
+                  <li>Presenza in mappa</li>
+                </ul>
+                <button class="primary-action full-button start-plan" data-plan="Starter" data-price="12,99" type="button">Attiva Starter</button>
+              </article>
+              <article class="pricing-card featured">
+                <p class="eyebrow">Pro</p>
+                <h2>29,99 EUR/mese</h2>
+                <p>Per locali e negozi che vogliono spingere eventi, offerte e coupon.</p>
+                <ul>
+                  <li>Contenuti illimitati</li>
+                  <li>Coupon QR multipli</li>
+                  <li>Eventi e reminder</li>
+                  <li>Statistiche conversione</li>
+                </ul>
+                <button class="primary-action full-button start-plan" data-plan="Pro" data-price="29,99" type="button">Attiva Pro</button>
+              </article>
+              <article class="pricing-card">
+                <p class="eyebrow">Premium</p>
+                <h2>59,99 EUR/mese</h2>
+                <p>Per campagne locali, sponsorizzazioni e massima visibilita cittadina.</p>
+                <ul>
+                  <li>Posizionamento prioritario</li>
+                  <li>Campagne push demo</li>
+                  <li>Analytics avanzate</li>
+                  <li>Supporto prioritario</li>
+                </ul>
+                <button class="primary-action full-button start-plan" data-plan="Premium" data-price="59,99" type="button">Attiva Premium</button>
+              </article>
+            </section>
+
+            <section class="panel checkout-panel" id="merchantCheckout" hidden>
+              <div class="panel-head">
+                <h2>Checkout negozio</h2>
+                <span class="pill" id="selectedPlanBadge">Starter</span>
+              </div>
+              <div class="auth-feedback" id="merchantCheckoutFeedback" role="status" aria-live="polite"></div>
+              <div class="checkout-grid">
+                <label class="field">
+                  <span>Nome attivita</span>
+                  <input id="merchantBusinessName" type="text" placeholder="Es. Caffe Centrale" />
+                </label>
+                <label class="field">
+                  <span>Categoria</span>
+                  <input id="merchantBusinessCategory" type="text" placeholder="Bar, ristorante, negozio..." />
+                </label>
+                <label class="field">
+                  <span>Metodo pagamento demo</span>
+                  <input id="merchantPaymentMethod" type="text" placeholder="Carta demo **** 4242" />
+                </label>
+                <button class="primary-action full-button" id="confirmMerchantPayment" type="button">Paga e crea negozio</button>
+              </div>
+              <p class="legal">Checkout demo: nessun addebito reale. In produzione collegare Stripe, Nexi o altro gateway di pagamento.</p>
+            </section>
+          </div>
+
+          <div class="merchant-dashboard" id="merchantDashboard" hidden>
+            <section class="panel merchant-subscription-panel">
+              <div>
+                <p class="eyebrow">Abbonamento attivo</p>
+                <h2 id="merchantSubscriptionTitle">Piano Pro</h2>
+                <p id="merchantSubscriptionMeta">Dashboard negozio abilitata.</p>
+              </div>
+              <button class="ghost" id="cancelMerchantPlan" type="button">Annulla demo</button>
+            </section>
+
+            <div class="merchant-layout">
+              <section class="panel">
+              <div class="panel-head">
+                <h2>Dashboard commerciante</h2>
+                <span class="pill success" id="merchantPlanPill">Piano attivo</span>
+              </div>
+              <div class="metrics">
+                <div><span>Visite profilo</span><strong>1.284</strong></div>
+                <div><span>Visualizzazioni 7gg</span><strong>8.920</strong></div>
+                <div><span>Coupon usati</span><strong>418</strong></div>
+                <div><span>Conversione</span><strong>12,6%</strong></div>
+              </div>
+            </section>
+
+            <section class="panel composer">
+              <h2>Pubblica contenuto</h2>
+              <div class="composer-preview"></div>
+              <textarea placeholder="Scrivi un post, una nuova offerta o lancia un evento..."></textarea>
+              <div class="composer-actions">
+                <button class="ghost" data-action="upload-media" type="button">Foto/video</button>
+                <button class="ghost" data-action="create-coupon" type="button">Coupon QR</button>
+                <button class="primary-action" id="publishDemo" type="button">Pubblica</button>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <h2>Campagne attive</h2>
+                <button class="ghost" data-action="new-campaign" type="button">Nuova</button>
+              </div>
+              <div class="campaign-list">
+                <div><strong>Aperitivo 2x1</strong><span>228 salvataggi - 74 usi</span></div>
+                <div><strong>Evento DJ set</strong><span>130 prenotazioni - 22 ticket</span></div>
+                <div><strong>Story saldi weekend</strong><span>4.218 impression</span></div>
+              </div>
+            </section>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="adminView">
+          <div class="admin-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <h2>Moderazione</h2>
+                <span class="pill warning">7 in coda</span>
+              </div>
+              <table>
+                <thead>
+                  <tr><th>Elemento</th><th>Tipo</th><th>Stato</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Moon Club</td><td>Attivita</td><td><span class="pill">Da verificare</span></td></tr>
+                  <tr><td>Commento segnalato</td><td>Contenuto</td><td><span class="pill warning">Urgente</span></td></tr>
+                  <tr><td>Coupon palestra</td><td>Offerta</td><td><span class="pill success">Ok</span></td></tr>
+                </tbody>
+              </table>
+            </section>
+            <section class="panel">
+              <h2>Analytics citta</h2>
+              <div class="bar-chart">
+                <span style="height:48%"></span>
+                <span style="height:72%"></span>
+                <span style="height:58%"></span>
+                <span style="height:90%"></span>
+                <span style="height:66%"></span>
+                <span style="height:84%"></span>
+              </div>
+              <div class="metrics compact">
+                <div><span>MAU</span><strong>7.420</strong></div>
+                <div><span>MRR</span><strong>EUR 4.910</strong></div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="auth-overlay" id="authOverlay" aria-hidden="true">
+      <section class="signup-panel" role="dialog" aria-modal="true" aria-labelledby="signupTitle">
+        <button class="close-button" id="closeSignup" type="button" aria-label="Chiudi">x</button>
+        <div class="signup-brand">
+          <img src="assets/app-icon.svg" alt="iAvezzano" />
+          <div>
+            <p class="eyebrow">Benvenuto</p>
+            <h2 id="signupTitle">Registrati a iAvezzano</h2>
+          </div>
+        </div>
+        <p class="signup-copy" id="signupCopy">Crea il tuo account per salvare eventi, coupon, nuove aperture e reminder cittadini.</p>
+        <div class="auth-feedback" id="authFeedback" role="status" aria-live="polite"></div>
+        <div class="signup-actions">
+          <button class="auth-button google" data-auth-provider="Google" type="button"><span>G</span> Continua con Google</button>
+          <button class="auth-button phone" id="phoneSignupMode" type="button"><span>+39</span> Continua con telefono</button>
+          <button class="auth-button apple" data-auth-provider="Apple" type="button"><span>A</span> Continua con Apple</button>
+        </div>
+        <div class="divider"><span>oppure</span></div>
+        <label class="field">
+          <span>Nome</span>
+          <input id="signupName" type="text" placeholder="Il tuo nome" autocomplete="name" />
+        </label>
+        <label class="field">
+          <span>Email</span>
+          <input id="signupEmail" type="email" placeholder="nome@email.it" autocomplete="email" />
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input id="signupPassword" type="password" placeholder="Crea una password" autocomplete="new-password" />
+        </label>
+        <label class="field phone-field" id="phoneField" hidden>
+          <span>Telefono</span>
+          <input id="signupPhone" type="tel" placeholder="+39 333 1234567" autocomplete="tel" />
+        </label>
+        <button class="primary-action full-button" id="createAccount" type="button">Crea account</button>
+        <button class="ghost full-button logout-button" id="logoutAccount" type="button" hidden>Esci dall'account</button>
+        <p class="legal">Continuando accetti termini, privacy e notifiche relative a offerte, eventi e coupon locali.</p>
+      </section>
+    </div>
+
+    <div class="demo-overlay" id="onboardingOverlay" aria-hidden="true">
+      <section class="demo-panel" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+        <button class="close-button" id="closeOnboarding" type="button" aria-label="Chiudi">x</button>
+        <div class="demo-visual">
+          <img src="assets/app-icon.svg" alt="iAvezzano" />
+          <div>
+            <p class="eyebrow" id="onboardingEyebrow">Demo guidata</p>
+            <h2 id="onboardingTitle">Benvenuto su iAvezzano</h2>
+          </div>
+        </div>
+        <div class="demo-progress" aria-hidden="true"><span id="onboardingProgress"></span></div>
+        <p class="demo-copy" id="onboardingCopy"></p>
+        <ul class="demo-points" id="onboardingPoints"></ul>
+        <div class="demo-step-dots" id="onboardingDots" aria-label="Avanzamento demo"></div>
+        <div class="demo-footer">
+          <button class="ghost" id="skipOnboarding" type="button">Salta</button>
+          <div class="demo-nav">
+            <button class="ghost" id="prevOnboarding" type="button">Indietro</button>
+            <button class="primary-action" id="nextOnboarding" type="button">Avanti</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

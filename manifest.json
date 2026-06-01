@@ -1,0 +1,45 @@
+{
+  "name": "iAvezzano",
+  "short_name": "iAvezzano",
+  "description": "Guida cittadina per eventi, sconti, nuove aperture, coupon e attivita ad Avezzano.",
+  "id": "/iavezzano/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#eef6fb",
+  "theme_color": "#071c3d",
+  "categories": ["lifestyle", "navigation", "shopping", "entertainment"],
+  "lang": "it-IT",
+  "icons": [
+    {
+      "src": "assets/app-icon.svg",
+      "sizes": "1024x1024",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Eventi stasera",
+      "short_name": "Eventi",
+      "description": "Apri gli eventi e le serate di oggi",
+      "url": "./index.html#events",
+      "icons": [{ "src": "assets/app-icon.svg", "sizes": "1024x1024", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Coupon e sconti",
+      "short_name": "Coupon",
+      "description": "Apri sconti e coupon disponibili",
+      "url": "./index.html#coupons",
+      "icons": [{ "src": "assets/app-icon.svg", "sizes": "1024x1024", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Mappa",
+      "short_name": "Mappa",
+      "description": "Trova attivita vicine",
+      "url": "./index.html#map",
+      "icons": [{ "src": "assets/app-icon.svg", "sizes": "1024x1024", "type": "image/svg+xml" }]
+    }
+  ]
+}
