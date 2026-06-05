@@ -1,4 +1,4 @@
-const CACHE_NAME = "iavezzano-v14";
+const CACHE_NAME = "iavezzano-v18";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -39,7 +39,12 @@ self.addEventListener("fetch", (event) => {
           }
           return response;
         })
-        .catch(() => caches.match("./index.html"));
+        .catch(() => {
+          if (event.request.mode === "navigate") {
+            return caches.match("./index.html");
+          }
+          return Response.error();
+        });
     })
   );
 });

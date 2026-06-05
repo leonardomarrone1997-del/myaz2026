@@ -13,8 +13,10 @@
     <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="assets/app-icon.svg" />
     <link rel="manifest" href="manifest.json" />
+    <link rel="preconnect" href="https://unpkg.com" crossorigin />
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=18" />
   </head>
   <body>
     <div class="app-shell">
@@ -28,14 +30,14 @@
         </div>
 
         <nav class="nav" id="mainNav">
-          <button class="nav-item active" data-view="feed" type="button">O <span>Oggi</span></button>
-          <button class="nav-item" data-view="map" type="button">M <span>Mappa</span></button>
-          <button class="nav-item" data-view="events" type="button">E <span>Eventi</span></button>
-          <button class="nav-item" data-view="coupons" type="button">C <span>Coupon</span></button>
-          <button class="nav-item" data-view="loyalty" type="button">L <span>Fedelta</span></button>
-          <button class="nav-item" data-view="profile" type="button">P <span>Profilo</span></button>
-          <button class="nav-item" data-view="merchant" type="button">B <span>Commerciante</span></button>
-          <button class="nav-item" data-view="admin" type="button">A <span>Admin</span></button>
+          <button class="nav-item active" data-view="feed" type="button" aria-label="Oggi"><strong>Og</strong><span>Oggi</span></button>
+          <button class="nav-item" data-view="map" type="button" aria-label="Mappa"><strong>Mp</strong><span>Mappa</span></button>
+          <button class="nav-item" data-view="events" type="button" aria-label="Eventi"><strong>Ev</strong><span>Eventi</span></button>
+          <button class="nav-item" data-view="coupons" type="button" aria-label="Coupon"><strong>Cp</strong><span>Coupon</span></button>
+          <button class="nav-item" data-view="loyalty" type="button" aria-label="Fedelta"><strong>Pt</strong><span>Punti</span></button>
+          <button class="nav-item" data-view="profile" type="button" aria-label="Profilo"><strong>Pr</strong><span>Profilo</span></button>
+          <button class="nav-item" data-view="merchant" type="button" aria-label="Commerciante"><strong>Biz</strong><span>Business</span></button>
+          <button class="nav-item" data-view="admin" type="button" aria-label="Admin"><strong>Ad</strong><span>Admin</span></button>
         </nav>
 
         <div class="side-card">
@@ -54,7 +56,7 @@
           </div>
           <div class="top-actions">
             <label class="search">
-              <span>Search</span>
+              <span>Cerca</span>
               <input id="searchInput" type="search" placeholder="Cerca eventi, sconti, negozi, servizi" />
             </label>
             <div class="weather-widget" aria-label="Meteo Avezzano demo">
@@ -113,7 +115,7 @@
           <div class="map-layout">
             <div class="map-surface real-map-shell" aria-label="Mappa reale attivita vicine">
               <div class="map-toolbar">
-                <span class="map-provider-badge">Google style</span>
+                <span class="map-provider-badge">OSM live</span>
                 <button class="ghost" id="importRealBusinesses" type="button">Importa attivita reali</button>
                 <button class="ghost" id="useLocation" type="button">Usa posizione</button>
                 <button class="ghost" id="recenterMap" type="button">Centra Avezzano</button>
@@ -489,7 +491,7 @@
 
     <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js"></script>
+    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script defer src="app.js?v=18"></script>
   </body>
 </html>

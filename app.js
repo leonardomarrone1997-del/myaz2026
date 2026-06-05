@@ -90,6 +90,7 @@ let mapMarkers = new Map();
 let realPlacesLoaded = false;
 let isLoadingRealPlaces = false;
 const OSM_CACHE_KEY = "iavezzano_osm_businesses_v1";
+const MAX_REAL_PLACES = 120;
 const wikidataImageCache = new Map();
 const DEMO_STATE_KEY = "iavezzano_demo_state";
 const ONBOARDING_KEY = "iavezzano_onboarding_seen";
@@ -315,11 +316,51 @@ function addDemoItem(key, item) {
 
 function showToast(message, type = "info") {
   const stack = document.querySelector("#toastStack");
+  if (!stack) return;
   const toast = document.createElement("div");
   toast.className = `toast ${type}`;
   toast.textContent = message;
   stack.appendChild(toast);
   setTimeout(() => toast.remove(), 3200);
+}
+
+function smartImageUrl(url, width = 640) {
+  if (!url || !url.includes("images.unsplash.com")) return url || "assets/app-icon.svg";
+  const next = new URL(url);
+  next.searchParams.set("auto", "format");
+  next.searchParams.set("fit", "crop");
+  next.searchParams.set("w", String(width));
+  next.searchParams.set("q", "58");
+  return next.toString();
+}
+
+function mediaAttrs(url, width = 640) {
+  return `data-bg="${smartImageUrl(url, width)}"`;
+}
+
+function hydrateLazyMedia(scope = document, eager = false) {
+  const nodes = [...scope.querySelectorAll("[data-bg]:not(.is-loaded)")];
+  if (!nodes.length) return;
+
+  const load = (node) => {
+    node.style.backgroundImage = `url('${node.dataset.bg}')`;
+    node.classList.add("is-loaded");
+  };
+
+  if (eager || !("IntersectionObserver" in window)) {
+    nodes.forEach(load);
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries, io) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      load(entry.target);
+      io.unobserve(entry.target);
+    });
+  }, { rootMargin: "160px" });
+
+  nodes.forEach((node) => observer.observe(node));
 }
 
 let onboardingIndex = 0;
@@ -360,8 +401,8 @@ function closeOnboarding(markSeen = true) {
 function maybeStartOnboarding(delay = 700) {
   if (localStorage.getItem(ONBOARDING_KEY)) return;
   setTimeout(() => {
-    const authIsOpen = document.querySelector("#authOverlay")?.classList.contains("active");
-    if (!authIsOpen) openOnboarding(true);
+    localStorage.setItem(ONBOARDING_KEY, "hinted");
+    showToast("Guida rapida disponibile dal pulsante Guida.");
   }, delay);
 }
 
@@ -373,8 +414,11 @@ function render() {
     </button>
   `).join("");
 
-  document.querySelector("#feedList").innerHTML = cityHighlights.map((item) => `
-    <article class="post utility-card">
+  document.querySelector("#feedList").innerHTML = cityHighlights.map((item) => {
+    const relatedPlace = findPlaceByName(item.place);
+    const searchText = [item.type, item.title, item.place, item.when, item.detail, item.cta, relatedPlace?.category, relatedPlace?.stats].filter(Boolean).join(" ");
+    return `
+    <article class="post utility-card" data-search="${searchText.toLowerCase()}">
       <div class="post-top">
         <div class="utility-badge">${item.type}</div>
         <div>
@@ -382,7 +426,7 @@ function render() {
           <span>${item.place} - ${item.when}</span>
         </div>
       </div>
-      <div class="post-media" style="background-image:url('${item.image}')"></div>
+      <div class="post-media lazy-media" ${mediaAttrs(item.image, 720)}></div>
       <div class="post-body">
         <p>${item.detail}</p>
         <div class="post-actions">
@@ -392,7 +436,8 @@ function render() {
         </div>
       </div>
     </article>
-  `).join("");
+  `;
+  }).join("");
 
   renderNearbyList();
 
@@ -407,7 +452,7 @@ function render() {
 
   document.querySelector("#tonightGrid").innerHTML = tonightEvents.map((item) => `
     <article class="tonight-card">
-      <div class="tonight-media" style="background-image:url('${item.image}')"></div>
+      <div class="tonight-media lazy-media" ${mediaAttrs(item.image, 720)}></div>
       <div class="tonight-body">
         <div class="tonight-time">${item.time}</div>
         <p class="eyebrow">${item.type}</p>
@@ -423,7 +468,7 @@ function render() {
 
   document.querySelector("#eventsGrid").innerHTML = events.map(([title, date, meta, image]) => `
     <article class="event-card">
-      <div class="card-media" style="background-image:url('${image}')"></div>
+      <div class="card-media lazy-media" ${mediaAttrs(image, 640)}></div>
       <div class="card-body">
         <h2>${title}</h2>
         <p>${date}</p>
@@ -457,6 +502,8 @@ function render() {
 
   renderUserProfile("settings");
   renderMerchantArea();
+  applySearchFilter();
+  hydrateLazyMedia(document.querySelector(".view.active") || document, true);
 }
 
 function profileRows(items) {
@@ -742,7 +789,7 @@ function createMapIcon(place) {
 function renderMapBusinessList() {
   document.querySelector("#mapBusinessList").innerHTML = mapPlaces.map((place) => `
     <button class="destination-item ${selectedPlace.id === place.id ? "active" : ""}" data-place-id="${place.id}" type="button">
-      <img class="destination-logo" src="${place.image || "assets/app-icon.svg"}" alt="" />
+      <img class="destination-logo" src="${smartImageUrl(place.image, 96)}" alt="" loading="lazy" decoding="async" />
       <span class="destination-copy">
         <strong>${place.name}</strong>
         <span>${place.category} - ${formatDistance(place)}</span>
@@ -751,6 +798,7 @@ function renderMapBusinessList() {
     </button>
   `).join("");
   document.querySelector("#realBusinessCount").textContent = realPlacesLoaded ? `${mapPlaces.length} reali` : "Demo";
+  applySearchFilter();
 }
 
 function renderNearbyList() {
@@ -857,7 +905,7 @@ async function loadRealAvezzanoBusinesses(force = false) {
 
     const places = (await Promise.all(elements.map(osmElementToPlace)))
       .sort((a, b) => distanceInKm(AVEZZANO_CENTER, a) - distanceInKm(AVEZZANO_CENTER, b))
-      .slice(0, 350);
+      .slice(0, MAX_REAL_PLACES);
 
     if (!places.length) throw new Error("Nessuna attivita trovata");
     localStorage.setItem(OSM_CACHE_KEY, JSON.stringify(places));
@@ -928,7 +976,10 @@ function initInteractiveMap() {
 
   if (interactiveMap) {
     interactiveMap.invalidateSize();
-    loadRealAvezzanoBusinesses();
+    const cached = cachedOsmPlaces();
+    if (cached.length && !realPlacesLoaded) {
+      applyImportedPlaces(cached.slice(0, MAX_REAL_PLACES), `${Math.min(cached.length, MAX_REAL_PLACES)} attivita caricate dalla cache locale.`);
+    }
     return;
   }
 
@@ -948,7 +999,12 @@ function initInteractiveMap() {
   rebuildMapMarkers();
 
   selectMapPlace(selectedPlace.id, false);
-  loadRealAvezzanoBusinesses();
+  const cached = cachedOsmPlaces();
+  if (cached.length) {
+    applyImportedPlaces(cached.slice(0, MAX_REAL_PLACES), `${Math.min(cached.length, MAX_REAL_PLACES)} attivita caricate dalla cache locale. Usa "Importa attivita reali" per aggiornare.`);
+  } else {
+    status.textContent = "Demo veloce attiva. Usa Importa attivita reali per aggiornare da OpenStreetMap.";
+  }
   setTimeout(() => interactiveMap.invalidateSize(), 80);
 }
 
@@ -962,6 +1018,8 @@ function switchView(view, updateHash = true) {
     item.classList.toggle("active", item.dataset.view === view);
   });
   document.querySelector("#pageTitle").textContent = titles[view];
+  hydrateLazyMedia(targetView, true);
+  applySearchFilter();
 
   if (updateHash && window.location.hash !== `#${view}`) {
     history.replaceState(null, "", `#${view}`);
@@ -1224,11 +1282,25 @@ document.querySelector("#importRealBusinesses").addEventListener("click", () => 
   loadRealAvezzanoBusinesses(true);
 });
 
-document.querySelector("#searchInput").addEventListener("input", (event) => {
-  const term = event.target.value.toLowerCase();
-  document.querySelectorAll(".post").forEach((post) => {
-    post.style.display = post.textContent.toLowerCase().includes(term) ? "" : "none";
+function applySearchFilter() {
+  const searchInput = document.querySelector("#searchInput");
+  const term = searchInput.value.trim().toLowerCase();
+  const searchable = document.querySelectorAll(".post, .tonight-card, .event-card, .coupon-card, .reward-card, .destination-item");
+  searchable.forEach((item) => {
+    const haystack = `${item.dataset.search || ""} ${item.textContent}`.toLowerCase();
+    item.hidden = Boolean(term) && !haystack.includes(term);
   });
+
+  if (term && document.querySelector("#feedView").classList.contains("active")) {
+    const bestPlace = findPlaceByName(term);
+    if (bestPlace) {
+      document.querySelector("#navigationLink").href = navigationUrl(bestPlace);
+    }
+  }
+}
+
+document.querySelector("#searchInput").addEventListener("input", () => {
+  applySearchFilter();
 });
 
 document.querySelector("#publishDemo").addEventListener("click", () => {
