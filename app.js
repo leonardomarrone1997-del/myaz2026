@@ -400,7 +400,8 @@ const titles = {
   loyalty: "Sistema fedelta",
   profile: "Profilo utente",
   merchant: "Crea il tuo negozio",
-  admin: "Admin panel"
+  admin: "Admin panel",
+  legal: "Privacy e termini"
 };
 
 const onboardingSteps = [
@@ -556,6 +557,84 @@ function maybeStartOnboarding(delay = 700) {
   }, delay);
 }
 
+const intelligenceLexicon = {
+  food: ["mangiare", "cena", "pranzo", "pizza", "pizzeria", "ristorante", "aperitivo", "food", "bere", "bar"],
+  shopping: ["vestiti", "abbigliamento", "negozi", "shopping", "moda", "scarpe", "casa", "home"],
+  night: ["stasera", "serata", "discoteca", "musica", "party", "live", "evento"],
+  fitness: ["palestra", "sport", "fitness", "allenamento", "benessere"],
+  deals: ["sconto", "coupon", "offerta", "promo", "risparmio"]
+};
+
+function normalizeText(value = "") {
+  return String(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function intelligenceIntent(term = "") {
+  const normalized = normalizeText(term);
+  return Object.entries(intelligenceLexicon)
+    .filter(([, words]) => words.some((word) => normalized.includes(word)))
+    .map(([intent]) => intent);
+}
+
+function placeQualityScore(place) {
+  let score = 0;
+  if (place.name) score += 15;
+  if (place.category) score += 15;
+  if (place.address) score += 15;
+  if (place.phone) score += 15;
+  if (place.lat && place.lng) score += 15;
+  if (place.photo) score += 20;
+  if (place.website) score += 5;
+  return Math.min(score, 100);
+}
+
+function placeMatchesIntent(place, intents) {
+  const text = normalizeText([place.name, place.category, place.address, place.stats, place.caption].filter(Boolean).join(" "));
+  return intents.some((intent) => {
+    if (intent === "food") return /ristorante|pizzeria|bar|pub|caffe|aperitivo/.test(text);
+    if (intent === "shopping") return /abbigliamento|shopping|negozio|home|tezenis/.test(text);
+    if (intent === "night") return /evento|discoteca|live|party|serata/.test(text);
+    if (intent === "fitness") return /palestra|fitness|sport|benessere/.test(text);
+    if (intent === "deals") return /coupon|sconto|promo|offerta/.test(text);
+    return false;
+  });
+}
+
+function intelligencePlaceScore(place, term = "") {
+  const intents = intelligenceIntent(term);
+  const text = normalizeText([place.name, place.category, place.address, place.stats, place.caption].filter(Boolean).join(" "));
+  let score = placeQualityScore(place);
+  if (term && text.includes(normalizeText(term))) score += 60;
+  if (intents.length && placeMatchesIntent(place, intents)) score += 45;
+  if (place.photo) score += 8;
+  if (place.stats?.toLowerCase().includes("aperto")) score += 5;
+  return score;
+}
+
+function intelligentPlaces(term = "", limit = mapPlaces.length) {
+  return [...mapPlaces]
+    .map((place) => ({ place, score: intelligencePlaceScore(place, term) }))
+    .sort((a, b) => b.score - a.score || distanceInKm(AVEZZANO_CENTER, a.place) - distanceInKm(AVEZZANO_CENTER, b.place))
+    .slice(0, limit)
+    .map((entry) => entry.place);
+}
+
+function intelligenceInsights() {
+  const missingPhotos = mapPlaces.filter((place) => !place.photo).length;
+  const missingPhones = mapPlaces.filter((place) => !place.phone).length;
+  const lowQuality = mapPlaces
+    .map((place) => ({ ...place, quality: placeQualityScore(place) }))
+    .filter((place) => place.quality < 60)
+    .sort((a, b) => a.quality - b.quality)
+    .slice(0, 5);
+  return [
+    [`${missingPhotos} schede senza foto reale`, "Priorita media"],
+    [`${missingPhones} schede senza telefono`, "Priorita alta"],
+    [`${lowQuality.length} schede sotto qualita 60/100`, lowQuality.map((place) => place.name).join(", ") || "Nessuna"],
+    ["Ranking invisibile attivo", "Ricerca, mappa e vicino a te usano intenti locali"]
+  ];
+}
+
 function render() {
   document.querySelector("#stories").innerHTML = quickActions.map(([title, text, view]) => `
     <button class="shortcut-card" data-view-target="${view}" type="button">
@@ -709,6 +788,27 @@ function settingsPanel(user) {
 
   return `
     <div class="settings-list">
+      <form class="profile-edit-form" id="profileEditForm">
+        <div class="checkout-grid">
+          <label class="field">
+            <span>Nome</span>
+            <input name="name" type="text" value="${user.name || ""}" required />
+          </label>
+          <label class="field">
+            <span>Cognome</span>
+            <input name="surname" type="text" value="${user.surname || ""}" required />
+          </label>
+          <label class="field">
+            <span>Email</span>
+            <input name="email" type="email" value="${user.email || ""}" required />
+          </label>
+          <label class="field">
+            <span>Telefono</span>
+            <input name="phone" type="tel" value="${user.phone || ""}" />
+          </label>
+        </div>
+        <button class="primary-action full-button" type="submit">Salva profilo</button>
+      </form>
       <label class="setting-toggle">
         <span>Notifiche eventi e serate</span>
         <input type="checkbox" checked />
@@ -736,6 +836,46 @@ function preferencesPanel() {
     <div class="preference-chips">
       ${userPreferences.map((item, index) => `<button class="${index < 4 ? "active" : ""}" data-action="toggle-preference" type="button">${item}</button>`).join("")}
     </div>
+  `;
+}
+
+function renderProfileActions() {
+  const user = getStoredUser();
+  const adminAction = isAdmin(user)
+    ? `
+      <button class="profile-action-card god-action" data-view-target="admin" type="button">
+        <strong>Pannello GOD</strong>
+        <span>Controllo admin completo</span>
+      </button>
+    `
+    : "";
+
+  document.querySelector(".profile-actions-grid").innerHTML = `
+    <button class="profile-action-card active" data-profile-panel="settings" type="button">
+      <strong>Impostazioni</strong>
+      <span>Account, privacy e notifiche</span>
+    </button>
+    ${adminAction}
+    <button class="profile-action-card" data-view-target="merchant" type="button">
+      <strong>Crea il tuo negozio</strong>
+      <span>Piani da 12,99 EUR/mese</span>
+    </button>
+    <button class="profile-action-card" data-profile-panel="coupons" type="button">
+      <strong>I miei coupon</strong>
+      <span>Sconti salvati e QR</span>
+    </button>
+    <button class="profile-action-card" data-profile-panel="events" type="button">
+      <strong>I miei eventi</strong>
+      <span>Prenotazioni e reminder</span>
+    </button>
+    <button class="profile-action-card" data-profile-panel="preferences" type="button">
+      <strong>Preferenze</strong>
+      <span>Categorie e interessi</span>
+    </button>
+    <button class="profile-action-card" data-view-target="map" type="button">
+      <strong>Luoghi salvati</strong>
+      <span>Attivita e percorsi</span>
+    </button>
   `;
 }
 
@@ -781,6 +921,7 @@ function renderUserProfile(panel = "settings") {
   document.querySelector("#profilePointCount").textContent = user ? "1.240" : 0;
   document.querySelector("#profileLevel").textContent = user ? "Gold" : "Base";
   document.querySelector("#profileSignupButton").hidden = Boolean(user);
+  renderProfileActions();
   renderProfilePanel(panel);
 }
 
@@ -800,6 +941,230 @@ function renderMerchantArea() {
   document.querySelector("#merchantSubscriptionTitle").textContent = `${subscription.plan} - ${subscription.businessName}`;
   document.querySelector("#merchantSubscriptionMeta").textContent = `${subscription.price} EUR/mese - ${subscription.category} - attivo dal ${subscription.startedAt}`;
   document.querySelector("#merchantPlanPill").textContent = subscription.plan;
+}
+
+function isAdmin(user = getStoredUser()) {
+  return user?.role === "admin";
+}
+
+function renderAdminDashboard() {
+  const root = document.querySelector("#adminDashboard");
+  if (!root) return;
+  const current = getStoredUser();
+  if (!isAdmin(current)) {
+    root.innerHTML = `
+      <section class="panel empty-profile">
+        <strong>Area riservata agli amministratori</strong>
+        <span>Accedi con un account admin per gestire utenti, contenuti e statistiche.</span>
+        <button class="primary-action" id="adminLoginButton" type="button">Login admin</button>
+      </section>
+    `;
+    document.querySelector("#adminLoginButton")?.addEventListener("click", () => openSignup("login"));
+    return;
+  }
+
+  const users = getUsers();
+  const state = getDemoState();
+  const requests = [
+    ...(state.events || []).map((item) => ["Prenotazione", item.title, "Utente"]),
+    ...(state.coupons || []).map((item) => ["Coupon", item.title, "Salvato"]),
+    ...(state.campaigns || []).map((item) => ["Campagna", item.title, "Demo"])
+  ];
+  const aiInsights = intelligenceInsights();
+
+  root.innerHTML = `
+    <div class="admin-shell">
+      <section class="panel admin-hero god-hero">
+        <div>
+          <p class="eyebrow">GOD mode</p>
+          <h2>Pannello GOD iAvezzano</h2>
+          <p>Controllo riservato all'account admin: utenti, ruoli, contenuti, richieste, sicurezza e dati locali.</p>
+        </div>
+        <button class="ghost" data-admin-action="logout" type="button">Logout</button>
+      </section>
+      <section class="metrics">
+        <div><span>Utenti</span><strong>${users.filter((user) => user.status !== "deleted").length}</strong></div>
+        <div><span>Admin</span><strong>${users.filter((user) => user.role === "admin").length}</strong></div>
+        <div><span>Richieste</span><strong>${requests.length}</strong></div>
+        <div><span>Attivita</span><strong>${mapPlaces.length}</strong></div>
+      </section>
+      <section class="panel intelligence-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">IA invisibile</p>
+            <h2>iAvezzano Intelligence Layer</h2>
+          </div>
+          <span class="pill success">Attivo</span>
+        </div>
+        <div class="campaign-list">
+          ${aiInsights.map(([title, status]) => `<div><strong>${title}</strong><span>${status}</span></div>`).join("")}
+        </div>
+      </section>
+      <section class="panel god-command">
+        <div>
+          <strong>Azioni rapide GOD</strong>
+          <span>Strumenti demo per controllo totale del prototipo.</span>
+        </div>
+        <div class="composer-actions">
+          <button class="ghost" data-admin-action="export-data" type="button">Esporta dati</button>
+          <button class="ghost" data-admin-action="seed-demo" type="button">Ripristina demo</button>
+          <button class="ghost" data-admin-action="clear-demo-state" type="button">Pulisci azioni demo</button>
+          <button class="ghost" data-admin-action="refresh-ai" type="button">Ricalcola IA</button>
+        </div>
+      </section>
+      <div class="admin-grid">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Utenti registrati</h2>
+            <span class="pill">${users.length} account</span>
+          </div>
+          <div class="admin-table-wrap">
+            <table>
+              <thead><tr><th>Utente</th><th>Ruolo</th><th>Stato</th><th>Azioni</th></tr></thead>
+              <tbody>
+                ${users.map((user) => `
+                  <tr>
+                    <td><strong>${user.name} ${user.surname || ""}</strong><br><span>${user.email || user.phone || "senza email"}</span></td>
+                    <td>${user.role}</td>
+                    <td><span class="pill ${user.status === "blocked" ? "warning" : "success"}">${user.status}</span></td>
+                    <td>
+                      <button class="ghost compact-button" data-admin-action="toggle-role" data-user-id="${user.id}" type="button">${user.role === "admin" ? "Utente" : "Admin"}</button>
+                      <button class="ghost compact-button" data-admin-action="toggle-status" data-user-id="${user.id}" type="button">${user.status === "blocked" ? "Sblocca" : "Blocca"}</button>
+                      <button class="ghost compact-button" data-admin-action="delete-user" data-user-id="${user.id}" type="button">Elimina</button>
+                    </td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Richieste e contenuti</h2>
+            <span class="pill warning">${requests.length || 3} in coda</span>
+          </div>
+          <div class="campaign-list">
+            ${(requests.length ? requests : [["Moderazione", "Moon Club", "Da verificare"], ["Contenuto", "Commento segnalato", "Urgente"], ["Offerta", "Coupon palestra", "Ok"]]).map(([type, title, status]) => `
+              <div><strong>${title}</strong><span>${type} - ${status}</span></div>
+            `).join("")}
+          </div>
+        </section>
+        <section class="panel">
+          <h2>Analytics citta</h2>
+          <div class="bar-chart">
+            <span style="height:48%"></span>
+            <span style="height:72%"></span>
+            <span style="height:58%"></span>
+            <span style="height:90%"></span>
+            <span style="height:66%"></span>
+            <span style="height:84%"></span>
+          </div>
+        </section>
+        <section class="panel">
+          <h2>Controlli sicurezza</h2>
+          <div class="settings-list">
+            <div class="profile-row"><div><strong>Password hash</strong><span>SHA-256 con salt per MVP statico</span></div><span class="pill success">Attivo</span></div>
+            <div class="profile-row"><div><strong>Admin protetto</strong><span>Accesso solo ruolo admin</span></div><span class="pill success">Attivo</span></div>
+            <div class="profile-row"><div><strong>Database locale</strong><span>localStorage, pronto per migrazione API</span></div><span class="pill warning">MVP</span></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  `;
+}
+
+function handleAdminAction(button) {
+  if (!isAdmin()) {
+    showToast("Accesso admin richiesto.", "error");
+    openSignup("login");
+    return;
+  }
+
+  if (button.dataset.adminAction === "logout") {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    updateAuthUi();
+    switchView("feed");
+    showToast("Logout admin completato.", "success");
+    return;
+  }
+
+  if (button.dataset.adminAction === "export-data") {
+    const payload = {
+      users: getUsers().map(publicUser),
+      demoState: getDemoState(),
+      merchant: getMerchantSubscription(),
+      exportedAt: new Date().toISOString()
+    };
+    console.info("iAvezzano GOD export", payload);
+    showToast("Export GOD generato in console browser.", "success");
+    return;
+  }
+
+  if (button.dataset.adminAction === "seed-demo") {
+    seedAdminUser().then(() => {
+      renderAdminDashboard();
+      showToast("Account admin demo verificato.", "success");
+    });
+    return;
+  }
+
+  if (button.dataset.adminAction === "clear-demo-state") {
+    localStorage.removeItem(DEMO_STATE_KEY);
+    renderAdminDashboard();
+    renderUserProfile("settings");
+    showToast("Azioni demo pulite.", "success");
+    return;
+  }
+
+  if (button.dataset.adminAction === "refresh-ai") {
+    renderAdminDashboard();
+    showToast("IA invisibile ricalcolata.", "success");
+    return;
+  }
+
+  const users = getUsers();
+  const user = users.find((item) => item.id === button.dataset.userId);
+  if (!user || user.id === "admin-demo" && button.dataset.adminAction === "delete-user") {
+    showToast("Operazione non disponibile su questo account.", "error");
+    return;
+  }
+
+  if (button.dataset.adminAction === "toggle-role") {
+    user.role = user.role === "admin" ? "user" : "admin";
+  }
+  if (button.dataset.adminAction === "toggle-status") {
+    user.status = user.status === "blocked" ? "active" : "blocked";
+  }
+  if (button.dataset.adminAction === "delete-user") {
+    user.status = "deleted";
+  }
+  saveUsers(users);
+  renderAdminDashboard();
+  showToast("Utente aggiornato.", "success");
+}
+
+const legalCopy = {
+  privacy: ["Privacy Policy", "iAvezzano MVP salva dati account, preferenze, coupon ed eventi in storage locale del browser. In produzione i dati saranno trattati su server sicuro con consenso, finalita esplicite e strumenti di cancellazione."],
+  terms: ["Termini e condizioni", "Il prototipo mostra funzionalita demo per utenti, commercianti e admin. Coupon, pagamenti, prenotazioni e statistiche non generano obblighi reali finche non saranno collegati a servizi certificati."],
+  cookies: ["Cookie Policy", "La versione statica non usa cookie di tracciamento proprietari. Usa localStorage per sessione, preferenze, cache demo e PWA. Servizi esterni come mappe o immagini possono applicare proprie policy."]
+};
+
+function renderLegalPanel(tab = "privacy") {
+  const panel = document.querySelector("#legalPanel");
+  if (!panel) return;
+  document.querySelectorAll(".legal-tab").forEach((button) => {
+    button.classList.toggle("active", button.dataset.legalTab === tab);
+  });
+  const [title, text] = legalCopy[tab] || legalCopy.privacy;
+  panel.innerHTML = `
+    <p class="eyebrow">Documento legale</p>
+    <h2>${title}</h2>
+    <p>${text}</p>
+    <div class="settings-list">
+      <div class="profile-row"><div><strong>Titolare demo</strong><span>iAvezzano MVP</span></div><span class="pill">Demo</span></div>
+      <div class="profile-row"><div><strong>Ultimo aggiornamento</strong><span>5 giugno 2026</span></div><span class="pill success">Attivo</span></div>
+    </div>
+  `;
 }
 
 function toRadians(value) {
@@ -937,7 +1302,9 @@ function createMapIcon(place) {
 }
 
 function renderMapBusinessList() {
-  document.querySelector("#mapBusinessList").innerHTML = mapPlaces.map((place) => `
+  const term = document.querySelector("#searchInput")?.value.trim() || "";
+  const places = term ? intelligentPlaces(term) : mapPlaces;
+  document.querySelector("#mapBusinessList").innerHTML = places.map((place) => `
     <button class="destination-item ${selectedPlace.id === place.id ? "active" : ""}" data-place-id="${place.id}" type="button">
       <img class="destination-logo" src="${smartImageUrl(place.photo || place.logo || place.image, 96)}" alt="" loading="lazy" decoding="async" />
       <span class="destination-copy">
@@ -952,7 +1319,7 @@ function renderMapBusinessList() {
 }
 
 function renderNearbyList() {
-  document.querySelector("#nearbyList").innerHTML = mapPlaces.slice(0, 6).map((item) => `
+  document.querySelector("#nearbyList").innerHTML = intelligentPlaces("", 6).map((item) => `
     <div><strong>${item.name}</strong><span>${item.category}</span></div>
   `).join("");
 }
@@ -1171,6 +1538,12 @@ function initInteractiveMap() {
 }
 
 function switchView(view, updateHash = true) {
+  if (view === "admin" && !isAdmin()) {
+    showToast("Area admin riservata. Accedi come amministratore.", "error");
+    openSignup("login");
+    return;
+  }
+
   const targetView = document.querySelector(`#${view}View`);
   if (!targetView) return;
 
@@ -1195,6 +1568,14 @@ function switchView(view, updateHash = true) {
 
   if (view === "profile") {
     renderUserProfile();
+  }
+
+  if (view === "admin") {
+    renderAdminDashboard();
+  }
+
+  if (view === "legal") {
+    renderLegalPanel();
   }
 
   closeMobileMenu();
@@ -1477,10 +1858,20 @@ function applySearchFilter() {
   const clearSearch = document.querySelector("#clearSearch");
   const searchStatus = document.querySelector("#searchStatus");
   const term = searchInput.value.trim().toLowerCase();
+  const intents = intelligenceIntent(term);
   const searchable = document.querySelectorAll(".post, .tonight-card, .event-card, .coupon-card, .reward-card, .destination-item");
   searchable.forEach((item) => {
     const haystack = `${item.dataset.search || ""} ${item.textContent}`.toLowerCase();
-    item.hidden = Boolean(term) && !haystack.includes(term);
+    const relatedPlace = item.dataset.placeId ? mapPlaces.find((place) => place.id === item.dataset.placeId) : null;
+    const semanticMatch = relatedPlace ? placeMatchesIntent(relatedPlace, intents) : intents.some((intent) => {
+      if (intent === "food") return /ristorante|pizzeria|aperitivo|cena|pranzo/.test(haystack);
+      if (intent === "shopping") return /shopping|abbigliamento|negozi|coupon/.test(haystack);
+      if (intent === "night") return /stasera|evento|serata|live|discoteca/.test(haystack);
+      if (intent === "fitness") return /palestra|fitness|sport/.test(haystack);
+      if (intent === "deals") return /coupon|sconto|offerta/.test(haystack);
+      return false;
+    });
+    item.hidden = Boolean(term) && !haystack.includes(term) && !semanticMatch;
   });
 
   if (clearSearch) clearSearch.hidden = !term;
@@ -1497,7 +1888,7 @@ function applySearchFilter() {
   }
 
   if (term && document.querySelector("#feedView").classList.contains("active")) {
-    const bestPlace = findPlaceByName(term);
+    const bestPlace = intelligentPlaces(term, 1)[0] || findPlaceByName(term);
     if (bestPlace) {
       document.querySelector("#navigationLink").href = navigationUrl(bestPlace);
     }
@@ -1515,6 +1906,52 @@ document.querySelector("#clearSearch").addEventListener("click", () => {
   searchInput.focus();
 });
 
+document.addEventListener("click", (event) => {
+  const legalTarget = event.target.closest("[data-legal-target]");
+  if (!legalTarget) return;
+  renderLegalPanel(legalTarget.dataset.legalTarget);
+});
+
+document.querySelector(".legal-menu")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-legal-tab]");
+  if (!button) return;
+  renderLegalPanel(button.dataset.legalTab);
+});
+
+document.addEventListener("click", (event) => {
+  const action = event.target.closest("[data-admin-action]");
+  if (!action) return;
+  handleAdminAction(action);
+});
+
+document.addEventListener("submit", (event) => {
+  if (event.target.id !== "profileEditForm") return;
+  event.preventDefault();
+  const current = getStoredUser();
+  if (!current) return;
+  const users = getUsers();
+  const user = users.find((item) => item.id === current.id);
+  if (!user) return;
+  const form = new FormData(event.target);
+  const nextEmail = String(form.get("email")).trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
+    showToast("Email profilo non valida.", "error");
+    return;
+  }
+  if (users.some((item) => item.id !== user.id && item.email.toLowerCase() === nextEmail)) {
+    showToast("Questa email e gia usata da un altro account.", "error");
+    return;
+  }
+  user.name = String(form.get("name")).trim();
+  user.surname = String(form.get("surname")).trim();
+  user.email = nextEmail;
+  user.phone = String(form.get("phone")).trim();
+  saveUsers(users);
+  persistSession(user);
+  showToast("Profilo aggiornato.", "success");
+  renderUserProfile("settings");
+});
+
 document.querySelector("#publishDemo").addEventListener("click", () => {
   const button = document.querySelector("#publishDemo");
   addDemoItem("merchantPosts", { title: "Nuovo contenuto commerciante" });
@@ -1526,19 +1963,91 @@ document.querySelector("#publishDemo").addEventListener("click", () => {
 const authOverlay = document.querySelector("#authOverlay");
 const openSignupButtons = [document.querySelector("#openSignup"), document.querySelector("#openSignupMini")];
 const AUTH_STORAGE_KEY = "iavezzano_user";
+const USERS_STORAGE_KEY = "iavezzano_users_v1";
+const RESET_STORAGE_KEY = "iavezzano_password_resets_v1";
 const MERCHANT_STORAGE_KEY = "iavezzano_merchant_subscription";
 const authFeedback = document.querySelector("#authFeedback");
 const signupCopy = document.querySelector("#signupCopy");
 const phoneField = document.querySelector("#phoneField");
 const signupName = document.querySelector("#signupName");
+const signupSurname = document.querySelector("#signupSurname");
 const signupEmail = document.querySelector("#signupEmail");
 const signupPassword = document.querySelector("#signupPassword");
+const signupPasswordConfirm = document.querySelector("#signupPasswordConfirm");
 const signupPhone = document.querySelector("#signupPhone");
+const acceptLegal = document.querySelector("#acceptLegal");
 const createAccountButton = document.querySelector("#createAccount");
+const loginAccountButton = document.querySelector("#loginAccount");
+const recoverPasswordButton = document.querySelector("#recoverPassword");
 const logoutAccountButton = document.querySelector("#logoutAccount");
 const merchantCheckout = document.querySelector("#merchantCheckout");
 const merchantCheckoutFeedback = document.querySelector("#merchantCheckoutFeedback");
 let selectedMerchantPlan = { plan: "Starter", price: "12,99" };
+let authMode = "register";
+
+function readJson(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJson(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getUsers() {
+  return readJson(USERS_STORAGE_KEY, []);
+}
+
+function saveUsers(users) {
+  writeJson(USERS_STORAGE_KEY, users);
+}
+
+function publicUser(user) {
+  if (!user) return null;
+  const { passwordHash, passwordSalt, ...safeUser } = user;
+  return safeUser;
+}
+
+function randomId(prefix = "id") {
+  return `${prefix}-${crypto.randomUUID ? crypto.randomUUID() : Date.now()}`;
+}
+
+async function sha256(value) {
+  const buffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function hashPassword(password, salt = randomId("salt")) {
+  return { salt, hash: await sha256(`${salt}:${password}`) };
+}
+
+async function seedAdminUser() {
+  const users = getUsers();
+  if (users.some((user) => user.role === "admin")) return;
+  const password = await hashPassword("Admin123!");
+  users.push({
+    id: "admin-demo",
+    name: "Admin",
+    surname: "iAvezzano",
+    email: "admin@iavezzano.it",
+    phone: "",
+    role: "admin",
+    provider: "Email",
+    passwordHash: password.hash,
+    passwordSalt: password.salt,
+    acceptedLegalAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    status: "active"
+  });
+  saveUsers(users);
+}
+
+function persistSession(user) {
+  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser(user)));
+}
 
 function getStoredUser() {
   try {
@@ -1549,7 +2058,15 @@ function getStoredUser() {
 }
 
 function saveUser(user) {
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+  const users = getUsers();
+  const index = users.findIndex((item) => item.id === user.id);
+  if (index >= 0) {
+    users[index] = { ...users[index], ...user };
+    saveUsers(users);
+    persistSession(users[index]);
+  } else {
+    persistSession(user);
+  }
 }
 
 function getMerchantSubscription() {
@@ -1579,11 +2096,31 @@ function closeSignup() {
   authOverlay.setAttribute("aria-hidden", "true");
 }
 
-function openSignup() {
+function setAuthMode(mode) {
+  authMode = mode;
+  const user = getStoredUser();
+  document.querySelector("#showRegisterMode").classList.toggle("active", mode === "register");
+  document.querySelector("#showLoginMode").classList.toggle("active", mode === "login");
+  document.querySelector("#signupTitle").textContent = mode === "login" ? "Accedi a iAvezzano" : "Registrati a iAvezzano";
+  signupCopy.textContent = mode === "login"
+    ? "Accedi con email e password per continuare."
+    : "Crea il tuo account per salvare eventi, coupon, nuove aperture e reminder cittadini.";
+  document.querySelectorAll(".register-only").forEach((item) => { item.hidden = mode === "login" || Boolean(user); });
+  document.querySelector("#socialSignupActions").hidden = mode === "login" || Boolean(user);
+  document.querySelector("#authDivider").hidden = mode === "login" || Boolean(user);
+  createAccountButton.hidden = mode !== "register" || Boolean(user);
+  loginAccountButton.hidden = mode !== "login" || Boolean(user);
+  recoverPasswordButton.hidden = mode !== "login" || Boolean(user);
+  signupName.closest(".field").hidden = mode === "login" || Boolean(user);
+  phoneField.hidden = true;
+}
+
+function openSignup(mode = "register") {
   const user = getStoredUser();
   authOverlay.classList.add("active");
   authOverlay.setAttribute("aria-hidden", "false");
   setFeedback(user ? `Accesso attivo come ${user.name}.` : "");
+  setAuthMode(user ? "login" : mode);
   updateAuthUi();
 }
 
@@ -1595,31 +2132,47 @@ function updateAuthUi() {
   document.querySelector("#openSignup").textContent = accountLabel;
   document.querySelector("#openSignupMini").textContent = miniLabel;
   signupCopy.textContent = user
-    ? `Ciao ${user.name}, il tuo account iAvezzano e attivo.`
+    ? `Ciao ${user.name}, il tuo account ${user.role === "admin" ? "admin" : "utente"} e attivo.`
     : "Crea il tuo account per salvare eventi, coupon, nuove aperture e reminder cittadini.";
 
-  createAccountButton.hidden = Boolean(user);
   logoutAccountButton.hidden = !user;
-  document.querySelectorAll(".signup-actions, .divider, .field:not(.phone-field)").forEach((item) => {
-    item.hidden = Boolean(user);
+  document.querySelectorAll(".field, .legal-check, .signup-actions, .divider, #createAccount, #loginAccount, #recoverPassword").forEach((item) => {
+    item.hidden = Boolean(user) || item.hidden;
   });
-  phoneField.hidden = true;
+  if (!user) setAuthMode(authMode);
   renderUserProfile("settings");
   renderMerchantArea();
+  renderAdminDashboard();
 }
 
-function completeRegistration(provider, details = {}) {
+async function completeRegistration(provider, details = {}) {
   const name = details.name || provider;
+  const email = (details.email || "").toLowerCase();
+  const users = getUsers();
+  const existing = email ? users.find((user) => user.email.toLowerCase() === email) : null;
+  if (existing) {
+    persistSession(existing);
+    setFeedback(`Accesso completato come ${existing.name}.`, "success");
+    updateAuthUi();
+    setTimeout(closeSignup, 700);
+    return;
+  }
   const user = {
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    id: randomId("user"),
     name,
-    email: details.email || "",
+    surname: details.surname || "",
+    email,
     phone: details.phone || "",
+    role: "user",
     provider,
-    createdAt: new Date().toISOString()
+    acceptedLegalAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    status: "active"
   };
+  users.push(user);
+  saveUsers(users);
 
-  saveUser(user);
+  persistSession(user);
   setFeedback(`Registrazione completata con ${provider}. Benvenuto, ${name}.`, "success");
   updateAuthUi();
   setTimeout(closeSignup, 900);
@@ -1649,9 +2202,20 @@ authOverlay.addEventListener("click", (event) => {
 document.querySelectorAll("[data-auth-provider]").forEach((button) => {
   button.addEventListener("click", () => {
     completeRegistration(button.dataset.authProvider, {
-      name: `${button.dataset.authProvider} User`
+      name: `${button.dataset.authProvider} User`,
+      email: `${button.dataset.authProvider.toLowerCase()}@demo.iavezzano.it`
     });
   });
+});
+
+document.querySelector("#showRegisterMode").addEventListener("click", () => {
+  setAuthMode("register");
+  setFeedback("");
+});
+
+document.querySelector("#showLoginMode").addEventListener("click", () => {
+  setAuthMode("login");
+  setFeedback("");
 });
 
 document.querySelector("#phoneSignupMode").addEventListener("click", () => {
@@ -1660,10 +2224,12 @@ document.querySelector("#phoneSignupMode").addEventListener("click", () => {
   setFeedback("Inserisci il numero di telefono e premi Crea account.", "info");
 });
 
-createAccountButton.addEventListener("click", () => {
+createAccountButton.addEventListener("click", async () => {
   const name = signupName.value.trim();
-  const email = signupEmail.value.trim();
+  const surname = signupSurname.value.trim();
+  const email = signupEmail.value.trim().toLowerCase();
   const password = signupPassword.value.trim();
+  const confirm = signupPasswordConfirm.value.trim();
   const phone = signupPhone.value.trim();
   const phoneMode = !phoneField.hidden;
 
@@ -1672,7 +2238,21 @@ createAccountButton.addEventListener("click", () => {
       setFeedback("Inserisci un numero di telefono valido.", "error");
       return;
     }
-    completeRegistration("Telefono", { name: name || "Utente iAvezzano", phone });
+    if (!acceptLegal.checked) {
+      setFeedback("Accetta privacy e termini per registrarti.", "error");
+      return;
+    }
+    await completeRegistration("Telefono", { name: name || "Utente iAvezzano", surname, phone });
+    return;
+  }
+
+  if (name.length < 2) {
+    setFeedback("Inserisci il nome.", "error");
+    return;
+  }
+
+  if (surname.length < 2) {
+    setFeedback("Inserisci il cognome.", "error");
     return;
   }
 
@@ -1681,28 +2261,114 @@ createAccountButton.addEventListener("click", () => {
     return;
   }
 
-  if (password.length < 6) {
-    setFeedback("La password deve contenere almeno 6 caratteri.", "error");
+  if (getUsers().some((user) => user.email.toLowerCase() === email)) {
+    setFeedback("Esiste gia un account con questa email. Vai al login.", "error");
+    setAuthMode("login");
     return;
   }
 
-  completeRegistration("Email", {
-    name: name || email.split("@")[0],
-    email
-  });
+  if (password.length < 8 || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+    setFeedback("La password deve avere almeno 8 caratteri, una maiuscola e un numero.", "error");
+    return;
+  }
+
+  if (password !== confirm) {
+    setFeedback("Le password non coincidono.", "error");
+    return;
+  }
+
+  if (!acceptLegal.checked) {
+    setFeedback("Accetta privacy e termini per registrarti.", "error");
+    return;
+  }
+
+  const passwordData = await hashPassword(password);
+  const users = getUsers();
+  const user = {
+    id: randomId("user"),
+    name,
+    surname,
+    email,
+    phone: "",
+    role: "user",
+    provider: "Email",
+    passwordHash: passwordData.hash,
+    passwordSalt: passwordData.salt,
+    acceptedLegalAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    status: "active"
+  };
+  users.push(user);
+  saveUsers(users);
+  persistSession(user);
+  setFeedback("Registrazione completata. Ti porto al profilo.", "success");
+  updateAuthUi();
+  setTimeout(() => {
+    closeSignup();
+    switchView("profile");
+  }, 800);
+});
+
+loginAccountButton.addEventListener("click", async () => {
+  const email = signupEmail.value.trim().toLowerCase();
+  const password = signupPassword.value.trim();
+  const user = getUsers().find((item) => item.email.toLowerCase() === email);
+
+  if (!user || user.status === "deleted") {
+    setFeedback("Email o password non corretti.", "error");
+    return;
+  }
+
+  if (user.status === "blocked") {
+    setFeedback("Account bloccato. Contatta l'amministratore.", "error");
+    return;
+  }
+
+  const passwordHash = user.passwordSalt ? (await hashPassword(password, user.passwordSalt)).hash : "";
+  if (passwordHash !== user.passwordHash) {
+    setFeedback("Email o password non corretti.", "error");
+    return;
+  }
+
+  user.lastLoginAt = new Date().toISOString();
+  saveUsers(getUsers().map((item) => item.id === user.id ? user : item));
+  persistSession(user);
+  setFeedback("Login completato.", "success");
+  updateAuthUi();
+  setTimeout(() => {
+    closeSignup();
+    switchView(user.role === "admin" ? "admin" : "profile");
+  }, 700);
+});
+
+recoverPasswordButton.addEventListener("click", () => {
+  const email = signupEmail.value.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setFeedback("Inserisci la tua email per recuperare la password.", "error");
+    return;
+  }
+  const resets = readJson(RESET_STORAGE_KEY, []);
+  resets.push({ email, token: randomId("reset"), createdAt: new Date().toISOString(), used: false });
+  writeJson(RESET_STORAGE_KEY, resets);
+  setFeedback("Richiesta registrata. In produzione invieremo una email sicura di reset.", "success");
 });
 
 logoutAccountButton.addEventListener("click", () => {
   localStorage.removeItem(AUTH_STORAGE_KEY);
   signupName.value = "";
+  signupSurname.value = "";
   signupEmail.value = "";
   signupPassword.value = "";
+  signupPasswordConfirm.value = "";
   signupPhone.value = "";
+  acceptLegal.checked = false;
   setFeedback("Sei uscito dall'account.", "info");
+  setAuthMode("login");
   updateAuthUi();
+  switchView("feed");
 });
 
-document.querySelector("#profileSignupButton").addEventListener("click", openSignup);
+document.querySelector("#profileSignupButton").addEventListener("click", () => openSignup("register"));
 
 document.querySelector(".profile-actions-grid").addEventListener("click", (event) => {
   const button = event.target.closest("[data-profile-panel]");
@@ -1805,24 +2471,30 @@ document.querySelector("#cancelMerchantPlan").addEventListener("click", () => {
   renderMerchantArea();
 });
 
-render();
-selectMapPlace(selectedPlace.id, false);
-updateAuthUi();
+async function bootApp() {
+  await seedAdminUser();
+  render();
+  renderLegalPanel();
+  selectMapPlace(selectedPlace.id, false);
+  updateAuthUi();
 
-const initialView = window.location.hash.replace("#", "");
-switchView(titles[initialView] ? initialView : "feed", false);
+  const initialView = window.location.hash.replace("#", "");
+  switchView(titles[initialView] ? initialView : "feed", false);
 
-maybeStartOnboarding();
+  maybeStartOnboarding();
 
-window.addEventListener("hashchange", () => {
-  const view = window.location.hash.replace("#", "");
-  if (titles[view]) switchView(view, false);
-});
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(() => {
-      // Service workers require http(s) or localhost; file:// previews can ignore this.
-    });
+  window.addEventListener("hashchange", () => {
+    const view = window.location.hash.replace("#", "");
+    if (titles[view]) switchView(view, false);
   });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js").catch(() => {
+        // Service workers require http(s) or localhost; file:// previews can ignore this.
+      });
+    });
+  }
 }
+
+bootApp();

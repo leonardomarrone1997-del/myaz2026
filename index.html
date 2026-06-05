@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://unpkg.com" crossorigin />
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="styles.css?v=27" />
+    <link rel="stylesheet" href="styles.css?v=32" />
   </head>
   <body>
     <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Apri menu" aria-controls="mainNav" aria-expanded="false">
@@ -35,14 +35,14 @@
         </div>
 
         <nav class="nav" id="mainNav">
-          <button class="nav-item active" data-view="feed" type="button" aria-label="Oggi"><strong>Og</strong><span>Oggi</span></button>
-          <button class="nav-item" data-view="map" type="button" aria-label="Mappa"><strong>Mp</strong><span>Mappa</span></button>
-          <button class="nav-item" data-view="events" type="button" aria-label="Eventi"><strong>Ev</strong><span>Eventi</span></button>
-          <button class="nav-item" data-view="coupons" type="button" aria-label="Coupon"><strong>Cp</strong><span>Coupon</span></button>
-          <button class="nav-item" data-view="loyalty" type="button" aria-label="Fedelta"><strong>Pt</strong><span>Punti</span></button>
-          <button class="nav-item" data-view="profile" type="button" aria-label="Profilo"><strong>Pr</strong><span>Profilo</span></button>
-          <button class="nav-item" data-view="merchant" type="button" aria-label="Commerciante"><strong>Biz</strong><span>Business</span></button>
-          <button class="nav-item" data-view="admin" type="button" aria-label="Admin"><strong>Ad</strong><span>Admin</span></button>
+          <button class="nav-item active" data-view="feed" type="button">Oggi</button>
+          <button class="nav-item" data-view="map" type="button">Mappa</button>
+          <button class="nav-item" data-view="events" type="button">Eventi</button>
+          <button class="nav-item" data-view="coupons" type="button">Coupon</button>
+          <button class="nav-item" data-view="loyalty" type="button">Punti e premi</button>
+          <button class="nav-item" data-view="profile" type="button">Profilo</button>
+          <button class="nav-item" data-view="merchant" type="button">Area commercianti</button>
+          <button class="nav-item" data-view="legal" type="button">Privacy e termini</button>
         </nav>
 
         <div class="side-card">
@@ -394,40 +394,25 @@
         </section>
 
         <section class="view" id="adminView">
-          <div class="admin-grid">
-            <section class="panel">
-              <div class="panel-head">
-                <h2>Moderazione</h2>
-                <span class="pill warning">7 in coda</span>
-              </div>
-              <table>
-                <thead>
-                  <tr><th>Elemento</th><th>Tipo</th><th>Stato</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>Moon Club</td><td>Attivita</td><td><span class="pill">Da verificare</span></td></tr>
-                  <tr><td>Commento segnalato</td><td>Contenuto</td><td><span class="pill warning">Urgente</span></td></tr>
-                  <tr><td>Coupon palestra</td><td>Offerta</td><td><span class="pill success">Ok</span></td></tr>
-                </tbody>
-              </table>
-            </section>
-            <section class="panel">
-              <h2>Analytics citta</h2>
-              <div class="bar-chart">
-                <span style="height:48%"></span>
-                <span style="height:72%"></span>
-                <span style="height:58%"></span>
-                <span style="height:90%"></span>
-                <span style="height:66%"></span>
-                <span style="height:84%"></span>
-              </div>
-              <div class="metrics compact">
-                <div><span>MAU</span><strong>7.420</strong></div>
-                <div><span>MRR</span><strong>EUR 4.910</strong></div>
-              </div>
-            </section>
+          <div id="adminDashboard"></div>
+        </section>
+
+        <section class="view" id="legalView">
+          <div class="legal-layout">
+            <aside class="panel legal-menu">
+              <button class="legal-tab active" data-legal-tab="privacy" type="button">Privacy Policy</button>
+              <button class="legal-tab" data-legal-tab="terms" type="button">Termini</button>
+              <button class="legal-tab" data-legal-tab="cookies" type="button">Cookie</button>
+            </aside>
+            <section class="panel legal-panel" id="legalPanel"></section>
           </div>
         </section>
+        <footer class="site-footer">
+          <button data-view-target="legal" data-legal-target="privacy" type="button">Privacy</button>
+          <button data-view-target="legal" data-legal-target="terms" type="button">Termini</button>
+          <button data-view-target="legal" data-legal-target="cookies" type="button">Cookie</button>
+          <span>iAvezzano MVP - dati demo e storage locale</span>
+        </footer>
       </main>
     </div>
 
@@ -441,17 +426,25 @@
             <h2 id="signupTitle">Registrati a iAvezzano</h2>
           </div>
         </div>
-        <p class="signup-copy" id="signupCopy">Crea il tuo account per salvare eventi, coupon, nuove aperture e reminder cittadini.</p>
+        <p class="signup-copy" id="signupCopy">Crea il tuo account o accedi per salvare eventi, coupon e preferenze.</p>
+        <div class="auth-mode-switch" role="tablist" aria-label="Accesso">
+          <button class="active" id="showRegisterMode" type="button">Registrati</button>
+          <button id="showLoginMode" type="button">Login</button>
+        </div>
         <div class="auth-feedback" id="authFeedback" role="status" aria-live="polite"></div>
-        <div class="signup-actions">
+        <div class="signup-actions" id="socialSignupActions">
           <button class="auth-button google" data-auth-provider="Google" type="button"><span>G</span> Continua con Google</button>
           <button class="auth-button phone" id="phoneSignupMode" type="button"><span>+39</span> Continua con telefono</button>
           <button class="auth-button apple" data-auth-provider="Apple" type="button"><span>A</span> Continua con Apple</button>
         </div>
-        <div class="divider"><span>oppure</span></div>
+        <div class="divider" id="authDivider"><span>oppure</span></div>
         <label class="field">
           <span>Nome</span>
           <input id="signupName" type="text" placeholder="Il tuo nome" autocomplete="name" />
+        </label>
+        <label class="field register-only">
+          <span>Cognome</span>
+          <input id="signupSurname" type="text" placeholder="Il tuo cognome" autocomplete="family-name" />
         </label>
         <label class="field">
           <span>Email</span>
@@ -461,13 +454,23 @@
           <span>Password</span>
           <input id="signupPassword" type="password" placeholder="Crea una password" autocomplete="new-password" />
         </label>
+        <label class="field register-only">
+          <span>Conferma password</span>
+          <input id="signupPasswordConfirm" type="password" placeholder="Ripeti la password" autocomplete="new-password" />
+        </label>
         <label class="field phone-field" id="phoneField" hidden>
           <span>Telefono</span>
           <input id="signupPhone" type="tel" placeholder="+39 333 1234567" autocomplete="tel" />
         </label>
+        <label class="legal-check register-only">
+          <input id="acceptLegal" type="checkbox" />
+          <span>Accetto Privacy Policy, Termini e Cookie Policy.</span>
+        </label>
         <button class="primary-action full-button" id="createAccount" type="button">Crea account</button>
+        <button class="primary-action full-button" id="loginAccount" type="button" hidden>Accedi</button>
+        <button class="ghost full-button" id="recoverPassword" type="button" hidden>Recupera password</button>
         <button class="ghost full-button logout-button" id="logoutAccount" type="button" hidden>Esci dall'account</button>
-        <p class="legal">Continuando accetti termini, privacy e notifiche relative a offerte, eventi e coupon locali.</p>
+        <p class="legal">Admin test: admin@iavezzano.it / Admin123!</p>
       </section>
     </div>
 
@@ -498,6 +501,6 @@
     <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
     <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script defer src="app.js?v=27"></script>
+    <script defer src="app.js?v=32"></script>
   </body>
 </html>

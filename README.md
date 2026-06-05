@@ -28,6 +28,41 @@ Apri `index.html` nel browser:
 
 Non richiede build, dipendenze o server locale.
 
+Per testare PWA, service worker e storage in modo piu fedele:
+
+`http://127.0.0.1:4178/`
+
+## Accessi demo
+
+- Admin: `admin@iavezzano.it`
+- Password: `Admin123!`
+
+L'app crea automaticamente l'account admin demo al primo avvio.
+
+La voce Admin non compare nel menu pubblico. Dopo login con queste credenziali, nel profilo appare il pulsante `Pannello GOD`, che apre l'area riservata admin.
+
+## IA interna invisibile
+
+Il sito include `iAvezzano Intelligence Layer`, un livello locale e invisibile che:
+
+- interpreta ricerche come "pizza", "vestiti", "stasera", "palestra", "sconti";
+- ordina attivita e lista "Vicino a te" con ranking smart;
+- calcola un punteggio qualita per schede locali;
+- mostra insight solo nel `Pannello GOD` admin;
+- non espone chatbot o elementi visibili agli utenti normali.
+
+## Database e sicurezza MVP
+
+Questa versione resta una PWA statica. Il database demo usa `localStorage` con queste raccolte:
+
+- `iavezzano_users_v1`
+- `iavezzano_user`
+- `iavezzano_password_resets_v1`
+- `iavezzano_demo_state`
+- `iavezzano_merchant_subscription`
+
+Le password email/password vengono salvate come hash SHA-256 con salt tramite Web Crypto. Per produzione reale bisogna migrare utenti, ruoli, sessioni, reset password e admin verso backend API con database server-side, token/sessioni sicuri, rate limit e audit log.
+
 ## Nota tecnica
 
 In questa sessione Flutter e npm non sono disponibili, quindi questo output e un MVP web statico pronto da provare. La struttura e pensata per essere convertita in:
