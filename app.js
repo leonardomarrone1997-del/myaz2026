@@ -34,7 +34,157 @@ const businesses = [
   }
 ];
 
-let mapPlaces = businesses.concat([
+const userSubmittedBusinesses = [
+  {
+    name: "Marynda",
+    category: "Abbigliamento",
+    distance: "Centro",
+    lat: 42.0357,
+    lng: 13.4230,
+    address: "Via Garibaldi 136, Avezzano",
+    phone: "+3908631871946",
+    stats: "Attivita inserita",
+    logo: "assets/app-icon.svg",
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
+    caption: "Negozio di abbigliamento inserito nella rete iAvezzano."
+  },
+  {
+    name: "Avezzano Center",
+    category: "Shopping mall",
+    distance: "Zona Tiburtina",
+    lat: 42.0345,
+    lng: 13.4384,
+    address: "Via Tiburtina Valeria 112, Avezzano",
+    phone: "+390863448059",
+    stats: "Attivita inserita",
+    photo: "https://www.fabricasgr.com/wp-content/uploads/2019/10/ipercoop_terni1-300x169.jpg",
+    photoCredit: "Fabrica SGR",
+    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80",
+    caption: "Centro shopping locale inserito nella rete iAvezzano."
+  },
+  {
+    name: "Dell'Olio 1920",
+    category: "Abbigliamento",
+    distance: "Centro",
+    lat: 42.0330,
+    lng: 13.4256,
+    address: "Via Camillo Corradini 172, Avezzano",
+    phone: "+39086332128",
+    stats: "Attivita inserita",
+    photo: "https://dellolio1920avezzano.it/img/dellolio-storia-avezzano.jpg",
+    logo: "https://dellolio1920avezzano.it/img/dellolio__logo-desktop.svg",
+    photoCredit: "Dell'Olio 1920",
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
+    caption: "Negozio di abbigliamento inserito nella rete iAvezzano."
+  },
+  {
+    name: "Renzo e Caterina",
+    category: "Ristorante",
+    distance: "Centro",
+    lat: 42.0318,
+    lng: 13.4269,
+    address: "Via Orazio Mattei 27, Avezzano",
+    phone: "+393477956213",
+    stats: "Attivita inserita",
+    logo: "assets/app-icon.svg",
+    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
+    caption: "Ristorante inserito nella rete iAvezzano."
+  },
+  {
+    name: "Nithael Abbigliamento",
+    category: "Abbigliamento",
+    distance: "Zona Francia",
+    lat: 42.0338,
+    lng: 13.4191,
+    address: "Via Francia 33, Avezzano",
+    phone: "+393288827472",
+    stats: "Attivita inserita",
+    logo: "assets/app-icon.svg",
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
+    caption: "Negozio di abbigliamento inserito nella rete iAvezzano."
+  },
+  {
+    name: "Shopping Park Ten",
+    category: "Abbigliamento",
+    distance: "Via XX Settembre",
+    lat: 42.0274,
+    lng: 13.4126,
+    address: "Via XX Settembre 411, Avezzano",
+    phone: "",
+    stats: "Attivita inserita",
+    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Shopping_Park_Ten.jpg/330px-Shopping_Park_Ten.jpg",
+    photoCredit: "Wikimedia Commons",
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
+    caption: "Attivita commerciale inserita nella rete iAvezzano."
+  },
+  {
+    name: "Tezenis",
+    category: "Abbigliamento",
+    distance: "Centro",
+    lat: 42.0331,
+    lng: 13.4252,
+    address: "Via Camillo Corradini 115/117, Avezzano",
+    phone: "+39086321855",
+    stats: "Attivita inserita",
+    logo: "assets/app-icon.svg",
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
+    caption: "Negozio di abbigliamento inserito nella rete iAvezzano."
+  },
+  {
+    name: "Ristorante Pizzeria L'Acquario",
+    category: "Ristorante",
+    distance: "Zona Brunelleschi",
+    lat: 42.0272,
+    lng: 13.4198,
+    address: "Via Filippo Brunelleschi 65, Avezzano",
+    phone: "+39086325941",
+    stats: "Attivita inserita",
+    logo: "assets/app-icon.svg",
+    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
+    caption: "Ristorante e pizzeria inserito nella rete iAvezzano."
+  },
+  {
+    name: "Libero Home",
+    category: "Abbigliamento",
+    distance: "Zona Bagnoli",
+    lat: 42.0418,
+    lng: 13.4269,
+    address: "V. Monsignor Pio Marcello Bagnoli 75/79, Avezzano",
+    phone: "+39086325280",
+    stats: "Attivita inserita",
+    logo: "assets/app-icon.svg",
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
+    caption: "Attivita locale inserita nella rete iAvezzano."
+  },
+  {
+    name: "OMG SRL",
+    category: "Shopping mall",
+    distance: "Via XX Settembre",
+    lat: 42.0279,
+    lng: 13.4130,
+    address: "Via XX Settembre 396, Avezzano",
+    phone: "+39086338225",
+    stats: "Attivita inserita",
+    logo: "assets/app-icon.svg",
+    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80",
+    caption: "Attivita commerciale inserita nella rete iAvezzano."
+  },
+  {
+    name: "Rigatoni Avezzano",
+    category: "Ristorante",
+    distance: "Via Roma",
+    lat: 42.0304,
+    lng: 13.4142,
+    address: "Via Roma 323, Avezzano",
+    phone: "+390863451919",
+    stats: "Attivita inserita",
+    logo: "assets/app-icon.svg",
+    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
+    caption: "Ristorante inserito nella rete iAvezzano."
+  }
+];
+
+let mapPlaces = businesses.concat(userSubmittedBusinesses, [
   {
     name: "Moon Club",
     category: "Discoteca",
@@ -775,7 +925,7 @@ async function osmElementToPlace(element, index) {
 }
 
 function createMapIcon(place) {
-  const logo = place.logo || place.image || "assets/app-icon.svg";
+  const logo = place.photo || place.logo || place.image || "assets/app-icon.svg";
 
   return L.divIcon({
     className: "google-map-marker-shell",
@@ -789,11 +939,11 @@ function createMapIcon(place) {
 function renderMapBusinessList() {
   document.querySelector("#mapBusinessList").innerHTML = mapPlaces.map((place) => `
     <button class="destination-item ${selectedPlace.id === place.id ? "active" : ""}" data-place-id="${place.id}" type="button">
-      <img class="destination-logo" src="${smartImageUrl(place.image, 96)}" alt="" loading="lazy" decoding="async" />
+      <img class="destination-logo" src="${smartImageUrl(place.photo || place.logo || place.image, 96)}" alt="" loading="lazy" decoding="async" />
       <span class="destination-copy">
         <strong>${place.name}</strong>
         <span>${place.category} - ${formatDistance(place)}</span>
-        <small>${place.address} - ${place.stats}</small>
+        <small>${[place.address, place.phone, place.photo ? "Foto reale" : "", place.stats].filter(Boolean).join(" - ")}</small>
       </span>
     </button>
   `).join("");
@@ -827,7 +977,19 @@ function rebuildMapMarkers() {
 function applyImportedPlaces(places, statusText) {
   if (!places.length) return;
 
-  mapPlaces = places;
+  const curated = businesses.concat(userSubmittedBusinesses).map((place, index) => ({
+    ...place,
+    id: place.id || `curated-${index}`
+  }));
+  const seen = new Set(curated.map((place) => `${place.name.toLowerCase()}-${place.address.toLowerCase()}`));
+  const imported = places.filter((place) => {
+    const key = `${place.name.toLowerCase()}-${place.address.toLowerCase()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  mapPlaces = curated.concat(imported).slice(0, MAX_REAL_PLACES);
   selectedPlace = mapPlaces[0];
   realPlacesLoaded = true;
   renderMapBusinessList();
@@ -940,7 +1102,7 @@ function selectMapPlace(placeId, shouldPan = true) {
 
   document.querySelector("#mapCard").innerHTML = `
     <strong>${place.name}</strong>
-    <span>${place.category} - ${place.address} - ${formatDistance(place)}</span>
+    <span>${[place.category, place.phone, place.photo ? "foto reale" : "", formatDistance(place)].filter(Boolean).join(" · ")}</span>
   `;
   document.querySelector("#navigationLink").href = navigationUrl(place);
   document.querySelector("#mapStatus").textContent = userPosition
@@ -1015,7 +1177,9 @@ function switchView(view, updateHash = true) {
   document.querySelectorAll(".view").forEach((el) => el.classList.remove("active"));
   targetView.classList.add("active");
   document.querySelectorAll(".nav-item").forEach((item) => {
-    item.classList.toggle("active", item.dataset.view === view);
+    const isActive = item.dataset.view === view;
+    item.classList.toggle("active", isActive);
+    item.toggleAttribute("aria-current", isActive);
   });
   document.querySelector("#pageTitle").textContent = titles[view];
   hydrateLazyMedia(targetView, true);
@@ -1032,7 +1196,30 @@ function switchView(view, updateHash = true) {
   if (view === "profile") {
     renderUserProfile();
   }
+
+  closeMobileMenu();
 }
+
+function setMobileMenu(open) {
+  const toggle = document.querySelector("#mobileMenuToggle");
+  const backdrop = document.querySelector("#mobileMenuBackdrop");
+  document.body.classList.toggle("menu-open", open);
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Chiudi menu" : "Apri menu");
+  }
+  if (backdrop) backdrop.hidden = !open;
+}
+
+function closeMobileMenu() {
+  setMobileMenu(false);
+}
+
+document.querySelector("#mobileMenuToggle")?.addEventListener("click", () => {
+  setMobileMenu(!document.body.classList.contains("menu-open"));
+});
+
+document.querySelector("#mobileMenuBackdrop")?.addEventListener("click", closeMobileMenu);
 
 document.querySelector("#mainNav").addEventListener("click", (event) => {
   const button = event.target.closest("[data-view]");
@@ -1224,6 +1411,9 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && overlay.classList.contains("active")) {
     closeOnboarding(true);
   }
+  if (event.key === "Escape" && document.body.classList.contains("menu-open")) {
+    closeMobileMenu();
+  }
 });
 
 document.querySelector("#mapBusinessList").addEventListener("click", (event) => {
@@ -1284,12 +1474,27 @@ document.querySelector("#importRealBusinesses").addEventListener("click", () => 
 
 function applySearchFilter() {
   const searchInput = document.querySelector("#searchInput");
+  const clearSearch = document.querySelector("#clearSearch");
+  const searchStatus = document.querySelector("#searchStatus");
   const term = searchInput.value.trim().toLowerCase();
   const searchable = document.querySelectorAll(".post, .tonight-card, .event-card, .coupon-card, .reward-card, .destination-item");
   searchable.forEach((item) => {
     const haystack = `${item.dataset.search || ""} ${item.textContent}`.toLowerCase();
     item.hidden = Boolean(term) && !haystack.includes(term);
   });
+
+  if (clearSearch) clearSearch.hidden = !term;
+
+  if (searchStatus) {
+    const activeView = document.querySelector(".view.active");
+    const activeResults = [...activeView.querySelectorAll(".post, .tonight-card, .event-card, .coupon-card, .reward-card, .destination-item")]
+      .filter((item) => !item.hidden);
+    searchStatus.hidden = !term;
+    searchStatus.classList.toggle("is-empty", Boolean(term) && activeResults.length === 0);
+    searchStatus.textContent = activeResults.length
+      ? `${activeResults.length} risultati per "${searchInput.value.trim()}"`
+      : `Nessun risultato per "${searchInput.value.trim()}"`;
+  }
 
   if (term && document.querySelector("#feedView").classList.contains("active")) {
     const bestPlace = findPlaceByName(term);
@@ -1301,6 +1506,13 @@ function applySearchFilter() {
 
 document.querySelector("#searchInput").addEventListener("input", () => {
   applySearchFilter();
+});
+
+document.querySelector("#clearSearch").addEventListener("click", () => {
+  const searchInput = document.querySelector("#searchInput");
+  searchInput.value = "";
+  applySearchFilter();
+  searchInput.focus();
 });
 
 document.querySelector("#publishDemo").addEventListener("click", () => {
@@ -1598,7 +1810,7 @@ selectMapPlace(selectedPlace.id, false);
 updateAuthUi();
 
 const initialView = window.location.hash.replace("#", "");
-if (titles[initialView]) switchView(initialView, false);
+switchView(titles[initialView] ? initialView : "feed", false);
 
 maybeStartOnboarding();
 
