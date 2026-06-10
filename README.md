@@ -1,142 +1,79 @@
-# iAvezzano MVP
+# MyAvezzano MVP
 
-Piattaforma web/PWA per Avezzano: eventi, sconti, coupon, attività locali, mappa cittadina e area commercianti.
-
-## Stato progetto
-
-Il progetto nasce come MVP web statico e ora va portato in modalità **pilot/produzione leggera** con:
-
-- **GitHub** per versionamento codice.
-- **Vercel** per deploy HTTPS e preview automatiche.
-- **Neon PostgreSQL** come database cloud.
-- **PWA installabile** su Android/iOS da browser.
-
-> Nota sicurezza: questo repository non deve contenere password, API key, stringhe di connessione Neon o credenziali admin reali. Usa sempre variabili ambiente su Vercel.
+Prototype web standalone della piattaforma MyAvezzano.
 
 ## Cosa contiene
 
-- Home cittadina con eventi, sconti, nuove aperture e attività vicine.
-- Design mobile-first con card, ricerca e widget meteo demo.
+- Home cittadina con eventi, sconti, nuove aperture e attivita vicine.
+- Design minimal con testata chiara, card leggere e micro-widget meteo demo per Avezzano.
 - Scorciatoie rapide per stasera, coupon, weekend, pranzo/cena e nuove aperture.
-- Mappa OpenStreetMap con import automatico attività di Avezzano, marker custom e link a Google Maps.
-- Eventi con prenotazioni demo.
+- Mappa reale OpenStreetMap con import automatico delle attivita di Avezzano, marker a goccia con logo/foto dove disponibile, cache locale e link a Google Maps.
+- Eventi con prenotazioni e ticket digitali demo.
 - Coupon digitali con QR Code demo.
-- Sistema fedeltà con punti, progress e premi.
-- Area profilo utente.
-- Area commercianti: creazione scheda negozio, piani e dashboard demo.
-- Admin panel per moderazione e analytics demo.
-- Manifest PWA e service worker per installazione.
+- Sistema fedelta con livello, progress e premi.
+- Sezione "Crea il tuo negozio" a pagamento, con piani da 12,99 EUR/mese e dashboard sbloccabile dopo checkout demo.
+- Admin panel con moderazione e analytics citta.
+- Icona app personalizzata in `assets/app-icon.svg`.
+- Manifest PWA e service worker per installazione su Android/iOS.
+- Registrazione demo attiva con email/password, Google, telefono e Apple usando storage locale.
+- Pannello profilo utente con foto profilo, impostazioni, coupon, eventi, preferenze e creazione negozio.
+- Pulsanti principali collegati a flussi demo con toast, salvataggi locali, prenotazioni, reminder, filtri, strumenti commerciante e riepilogo nel profilo utente.
+- Demo guidata al primo ingresso, riapribile dal pulsante Guida e dalle impostazioni del profilo.
 
-## Obiettivo del pilot
+## Come aprirla
 
-Prima di aggiungere altre funzioni, l'obiettivo è validare iAvezzano con i primi locali reali:
+Apri `index.html` nel browser:
 
-1. Pubblicare una versione stabile su Vercel.
-2. Collegare Neon come database reale.
-3. Inserire 10-30 attività vere.
-4. Generare QR tracciati per ogni partner.
-5. Misurare scansioni, aperture offerte e coupon salvati/usati.
-6. Usare i primi dati come prova commerciale per nuovi partner.
+`outputs/localhub/index.html`
 
-## Struttura minima consigliata database
+Non richiede build, dipendenze o server locale.
 
-Vedi `neon_schema.sql` per uno schema iniziale con:
+Per testare PWA, service worker e storage in modo piu fedele:
 
-- `users`
-- `businesses`
-- `merchant_accounts`
-- `offers`
-- `events`
-- `qr_codes`
-- `qr_scans`
-- `subscriptions`
+`http://127.0.0.1:4178/`
 
-## Variabili ambiente
+## Accessi demo
 
-Copia `.env.example` e configura i valori reali su Vercel, non nel repository.
+- Admin: `admin@myavezzano.it`
+- Password: `Admin123!`
 
-Variabili principali:
+L'app crea automaticamente l'account admin demo al primo avvio.
 
-```bash
-DATABASE_URL="postgresql://..."
-APP_BASE_URL="https://iavezzano.it"
-ADMIN_EMAIL="admin@iavezzano.it"
-SESSION_SECRET="usa-una-stringa-lunga-e-casuale"
-```
+La voce Admin non compare nel menu pubblico. Dopo login con queste credenziali, nel profilo appare il pulsante `Pannello GOD`, che apre l'area riservata admin.
 
-## Deploy su Vercel
+## Asset visuali
 
-1. Collega il repository GitHub a Vercel.
-2. Imposta il branch `main` come Production Branch.
-3. Configura le variabili ambiente in Vercel Project Settings.
-4. Collega Neon e usa `DATABASE_URL` solo lato server/API.
-5. Verifica che il dominio sia in HTTPS.
-6. Testa da smartphone: installazione PWA, mappa, QR, area partner e form.
+Lo sfondo sfocato di Avezzano usa una foto panoramica pubblica da Wikimedia Commons: `Avezzano_view.jpg`.
+Se il sito viene pubblicato in produzione, e consigliato salvare l'immagine in locale/CDN e mantenere il credito autore/licenza nella pagina legale.
 
-## Neon database
+## IA interna invisibile
 
-Per preparare Neon:
+Il sito include `MyAvezzano Intelligence Layer`, un livello locale e invisibile che:
 
-1. Apri la console Neon.
-2. Crea un database dedicato a iAvezzano.
-3. Esegui `neon_schema.sql`.
-4. Copia la connection string in `DATABASE_URL` su Vercel.
-5. Non esporre `DATABASE_URL` nel frontend.
+- interpreta ricerche come "pizza", "vestiti", "stasera", "palestra", "sconti";
+- ordina attivita e lista "Vicino a te" con ranking smart;
+- calcola un punteggio qualita per schede locali;
+- mostra insight solo nel `Pannello GOD` admin;
+- non espone chatbot o elementi visibili agli utenti normali.
 
-## Sicurezza prima del lancio
+## Database e sicurezza MVP
 
-Prima di raccogliere dati reali:
+Questa versione resta una PWA statica. Il database demo usa `localStorage` con queste raccolte:
 
-- rimuovere credenziali demo dal codice e dalla documentazione;
-- creare admin solo lato database/server;
-- usare sessioni/token sicuri;
-- aggiungere rate limit su login, form e QR scan;
-- validare input utente lato server;
-- preparare privacy policy e termini;
-- fare backup/export periodico del database Neon.
+- `myavezzano_users_v1`
+- `myavezzano_user`
+- `myavezzano_password_resets_v1`
+- `myavezzano_demo_state`
+- `myavezzano_merchant_subscription`
 
-## Come aprire la versione locale
+Le password email/password vengono salvate come hash SHA-256 con salt tramite Web Crypto. Per produzione reale bisogna migrare utenti, ruoli, sessioni, reset password e admin verso backend API con database server-side, token/sessioni sicuri, rate limit e audit log.
 
-Apri `index.html` nel browser.
+## Nota tecnica
 
-Per testare PWA, service worker e storage in modo più fedele, servi la cartella con un server locale statico, per esempio:
+In questa sessione Flutter e npm non sono disponibili, quindi questo output e un MVP web statico pronto da provare. La struttura e pensata per essere convertita in:
 
-```bash
-npx serve .
-```
-
-## Roadmap tecnica breve
-
-### Fase 1 - Pilot stabile
-
-- Deploy Vercel funzionante.
-- Database Neon con schema base.
-- Admin protetto.
-- CRUD attività, eventi e offerte.
-- QR tracciati per ogni locale.
-
-### Fase 2 - Commercianti
-
-- Dashboard commerciante reale.
-- Coupon creati dal partner.
-- Statistiche base: scansioni, aperture, coupon usati.
-- Pagina pubblica partner fondatore.
-
-### Fase 3 - Crescita
-
-- Notifiche push.
-- Pagamenti/abbonamenti.
-- App wrapper con Capacitor se serve pubblicazione store.
-- Analytics avanzate per zona, campagna e locale.
-
-## Posizionamento commerciale
-
-iAvezzano non va presentata come semplice app, ma come rete cittadina locale:
-
-> Eventi, offerte, coupon e attività di Avezzano in un'unica guida, con QR tracciati per ogni partner.
-
-Formula consigliata per il lancio:
-
-- primi 10 partner fondatori: ingresso gratuito pilot;
-- successivi 20: contributo attivazione simbolico;
-- piano mensile dopo validazione: da 12,99 EUR/mese.
+- Flutter mobile/web per il frontend.
+- Node.js/NestJS per backend API.
+- PostgreSQL/PostGIS per dati e geolocalizzazione.
+- Firebase Cloud Messaging per notifiche push.
+- Cloud Storage per media.

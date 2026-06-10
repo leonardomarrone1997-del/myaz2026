@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
-  <title id="title">iAvezzano app icon</title>
+  <title id="title">MyAvezzano app icon</title>
   <desc id="desc">App icon with Avezzano-inspired tower, mountain, map pin, connectivity dish and Italian ribbon.</desc>
   <defs>
     <linearGradient id="sky" x1="160" x2="864" y1="130" y2="790" gradientUnits="userSpaceOnUse">
@@ -51,6 +51,6 @@
     <circle cx="238" cy="157" r="24" fill="#0e99ef" stroke="#fff" stroke-width="16"/>
     <path d="M81 291h95" stroke="#073b8c" stroke-width="18" stroke-linecap="round"/>
   </g>
-  <text x="230" y="808" font-family="Arial, Helvetica, sans-serif" font-size="104" font-weight="900" fill="#ffffff" stroke="#02113f" stroke-width="6">iAvezzano</text>
+  <text x="176" y="808" font-family="Arial, Helvetica, sans-serif" font-size="98" font-weight="900" fill="#ffffff" stroke="#02113f" stroke-width="6">MyAvezzano</text>
   <circle cx="236" cy="737" r="18" fill="#1cc7ff"/>
 </svg>

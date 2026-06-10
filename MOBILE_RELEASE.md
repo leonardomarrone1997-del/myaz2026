@@ -1,4 +1,4 @@
-# iAvezzano - Android e iOS
+# MyAvezzano - Android e iOS
 
 L'app e stata preparata come PWA installabile su Android e iOS.
 
@@ -16,8 +16,8 @@ L'app e stata preparata come PWA installabile su Android e iOS.
 
 La PWA deve essere pubblicata su un dominio HTTPS, per esempio:
 
-- `https://iavezzano.it`
-- `https://app.iavezzano.it`
+- `https://myavezzano.it`
+- `https://app.myavezzano.it`
 
 Dopo la pubblicazione:
 

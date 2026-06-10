@@ -1,4 +1,4 @@
-# iAvezzano - Google Maps ufficiale
+# MyAvezzano - Google Maps ufficiale
 
 Nel prototipo attuale la mappa usa Leaflet con tile OpenStreetMap/CARTO e look Google-like. Questo evita API key e funziona subito.
 

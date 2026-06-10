@@ -7,7 +7,7 @@ const businesses = [
     lng: 13.4277,
     address: "Via Corradini, Avezzano",
     image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80",
-    caption: "Menu pranzo di stagione con calice incluso. Solo oggi punti doppi per chi prenota da iAvezzano.",
+    caption: "Menu pranzo di stagione con calice incluso. Solo oggi punti doppi per chi prenota da MyAvezzano.",
     stats: "Aperto ora"
   },
   {
@@ -46,7 +46,7 @@ const userSubmittedBusinesses = [
     stats: "Attivita inserita",
     logo: "assets/app-icon.svg",
     image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
-    caption: "Negozio di abbigliamento inserito nella rete iAvezzano."
+    caption: "Negozio di abbigliamento inserito nella rete MyAvezzano."
   },
   {
     name: "Avezzano Center",
@@ -60,7 +60,7 @@ const userSubmittedBusinesses = [
     photo: "https://www.fabricasgr.com/wp-content/uploads/2019/10/ipercoop_terni1-300x169.jpg",
     photoCredit: "Fabrica SGR",
     image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80",
-    caption: "Centro shopping locale inserito nella rete iAvezzano."
+    caption: "Centro shopping locale inserito nella rete MyAvezzano."
   },
   {
     name: "Dell'Olio 1920",
@@ -75,7 +75,7 @@ const userSubmittedBusinesses = [
     logo: "https://dellolio1920avezzano.it/img/dellolio__logo-desktop.svg",
     photoCredit: "Dell'Olio 1920",
     image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
-    caption: "Negozio di abbigliamento inserito nella rete iAvezzano."
+    caption: "Negozio di abbigliamento inserito nella rete MyAvezzano."
   },
   {
     name: "Renzo e Caterina",
@@ -88,7 +88,7 @@ const userSubmittedBusinesses = [
     stats: "Attivita inserita",
     logo: "assets/app-icon.svg",
     image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
-    caption: "Ristorante inserito nella rete iAvezzano."
+    caption: "Ristorante inserito nella rete MyAvezzano."
   },
   {
     name: "Nithael Abbigliamento",
@@ -101,7 +101,7 @@ const userSubmittedBusinesses = [
     stats: "Attivita inserita",
     logo: "assets/app-icon.svg",
     image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
-    caption: "Negozio di abbigliamento inserito nella rete iAvezzano."
+    caption: "Negozio di abbigliamento inserito nella rete MyAvezzano."
   },
   {
     name: "Shopping Park Ten",
@@ -115,7 +115,7 @@ const userSubmittedBusinesses = [
     photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Shopping_Park_Ten.jpg/330px-Shopping_Park_Ten.jpg",
     photoCredit: "Wikimedia Commons",
     image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
-    caption: "Attivita commerciale inserita nella rete iAvezzano."
+    caption: "Attivita commerciale inserita nella rete MyAvezzano."
   },
   {
     name: "Tezenis",
@@ -128,7 +128,7 @@ const userSubmittedBusinesses = [
     stats: "Attivita inserita",
     logo: "assets/app-icon.svg",
     image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
-    caption: "Negozio di abbigliamento inserito nella rete iAvezzano."
+    caption: "Negozio di abbigliamento inserito nella rete MyAvezzano."
   },
   {
     name: "Ristorante Pizzeria L'Acquario",
@@ -141,7 +141,7 @@ const userSubmittedBusinesses = [
     stats: "Attivita inserita",
     logo: "assets/app-icon.svg",
     image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
-    caption: "Ristorante e pizzeria inserito nella rete iAvezzano."
+    caption: "Ristorante e pizzeria inserito nella rete MyAvezzano."
   },
   {
     name: "Libero Home",
@@ -154,7 +154,7 @@ const userSubmittedBusinesses = [
     stats: "Attivita inserita",
     logo: "assets/app-icon.svg",
     image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
-    caption: "Attivita locale inserita nella rete iAvezzano."
+    caption: "Attivita locale inserita nella rete MyAvezzano."
   },
   {
     name: "OMG SRL",
@@ -167,7 +167,7 @@ const userSubmittedBusinesses = [
     stats: "Attivita inserita",
     logo: "assets/app-icon.svg",
     image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80",
-    caption: "Attivita commerciale inserita nella rete iAvezzano."
+    caption: "Attivita commerciale inserita nella rete MyAvezzano."
   },
   {
     name: "Rigatoni Avezzano",
@@ -180,9 +180,11 @@ const userSubmittedBusinesses = [
     stats: "Attivita inserita",
     logo: "assets/app-icon.svg",
     image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
-    caption: "Ristorante inserito nella rete iAvezzano."
+    caption: "Ristorante inserito nella rete MyAvezzano."
   }
 ];
+
+const verifiedPartnerNames = new Set(userSubmittedBusinesses.map((place) => place.name));
 
 let mapPlaces = businesses.concat(userSubmittedBusinesses, [
   {
@@ -239,11 +241,11 @@ let userPosition = null;
 let mapMarkers = new Map();
 let realPlacesLoaded = false;
 let isLoadingRealPlaces = false;
-const OSM_CACHE_KEY = "iavezzano_osm_businesses_v1";
+const OSM_CACHE_KEY = "myavezzano_osm_businesses_v1";
 const MAX_REAL_PLACES = 120;
 const wikidataImageCache = new Map();
-const DEMO_STATE_KEY = "iavezzano_demo_state";
-const ONBOARDING_KEY = "iavezzano_onboarding_seen";
+const DEMO_STATE_KEY = "myavezzano_demo_state";
+const ONBOARDING_KEY = "myavezzano_onboarding_seen";
 
 const categoryImages = {
   "Ristorante": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
@@ -263,9 +265,9 @@ const categoryImages = {
 const quickActions = [
   ["Eventi stasera", "3 serate e 1 live music", "events"],
   ["Sconti vicini", "Coupon utilizzabili oggi", "coupons"],
+  ["Estate 2026", "Percorsi, serate e promo estive", "summer"],
   ["Nuove aperture", "Locali e negozi appena aperti", "feed"],
-  ["Pranzo e cena", "Ristoranti con offerte attive", "map"],
-  ["Weekend", "Programma dei prossimi giorni", "events"]
+  ["Pranzo e cena", "Ristoranti con offerte attive", "map"]
 ];
 
 const cityHighlights = [
@@ -360,6 +362,37 @@ const tonightEvents = [
   }
 ];
 
+const summerHighlights = [
+  {
+    title: "Aperitivo al tramonto",
+    type: "Serata",
+    place: "Caffe Risorgimento",
+    text: "Tappa leggera dopo lavoro, coupon drink e percorso a piedi dal centro.",
+    cta: "Salva tappa"
+  },
+  {
+    title: "Shopping fresco in centro",
+    type: "Shopping",
+    place: "Dell'Olio 1920",
+    text: "Partner verificato con selezione estiva e scheda completa in mappa.",
+    cta: "Apri mappa"
+  },
+  {
+    title: "Cena estate Marsica",
+    type: "Food",
+    place: "Renzo e Caterina",
+    text: "Ristorante consigliato per una cena estiva con prenotazione demo.",
+    cta: "Prenota"
+  },
+  {
+    title: "Weekend al Shopping Park Ten",
+    type: "Famiglia",
+    place: "Shopping Park Ten",
+    text: "Foto reale, percorso rapido e promemoria per il fine settimana.",
+    cta: "Dettagli"
+  }
+];
+
 const events = [
   ["Festa anni 90", "Ven 14 giugno - 22:30", "Disco - prevendite aperte", "https://images.unsplash.com/photo-1505236858219-8359eb29e329?auto=format&fit=crop&w=900&q=80"],
   ["Street food in piazza", "Sab 15 giugno - 20:00", "Festa - 18 stand", "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=900&q=80"],
@@ -401,6 +434,7 @@ const titles = {
   profile: "Profilo utente",
   merchant: "Crea il tuo negozio",
   admin: "Admin panel",
+  summer: "Estate 2026",
   legal: "Privacy e termini"
 };
 
@@ -409,7 +443,7 @@ const onboardingSteps = [
     view: "feed",
     eyebrow: "Primo ingresso",
     title: "La home ti mostra cosa conta oggi",
-    copy: "iAvezzano non e pensata come un social infinito: apre subito su eventi, sconti, nuove aperture e cose utili in citta.",
+    copy: "MyAvezzano non e pensata come un social infinito: apre subito su eventi, sconti, nuove aperture e cose utili in citta.",
     points: ["Scorri le card principali", "Salva quello che ti interessa", "Apri subito mappa, coupon o eventi"]
   },
   {
@@ -540,6 +574,7 @@ function openOnboarding(reset = false) {
   overlay.classList.add("active");
   overlay.setAttribute("aria-hidden", "false");
   renderOnboardingStep();
+  animateActiveView(overlay);
 }
 
 function closeOnboarding(markSeen = true) {
@@ -706,6 +741,29 @@ function render() {
     </article>
   `).join("");
 
+  document.querySelector("#summerGrid").innerHTML = summerHighlights.map((item) => {
+    const place = findPlaceByName(item.place);
+    const verified = place && isVerifiedPartner(place);
+    return `
+      <article class="summer-card" data-search="${[item.title, item.type, item.place, item.text, place?.category].filter(Boolean).join(" ").toLowerCase()}">
+        <div class="summer-icon">☀</div>
+        <div>
+          <p class="eyebrow">${item.type}</p>
+          <h2>${item.title}</h2>
+          <p>${item.text}</p>
+          <div class="summer-meta">
+            <span>${item.place}</span>
+            ${verified ? `<span class="verified-badge">Partner verificato</span>` : ""}
+          </div>
+          <div class="post-actions">
+            <button data-action="open-map-place" data-place="${item.place}" type="button">${item.cta}</button>
+            <button class="save-action" data-action="save-highlight" data-title="${item.title}" data-type="Estate 2026" type="button">Salva</button>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+
   document.querySelector("#couponsGrid").innerHTML = coupons.map(([title, place, expires, meta]) => `
     <article class="coupon-card">
       <div class="card-body">
@@ -733,6 +791,7 @@ function render() {
   renderMerchantArea();
   applySearchFilter();
   hydrateLazyMedia(document.querySelector(".view.active") || document, true);
+  animateGlobalSurfaces();
 }
 
 function profileRows(items) {
@@ -770,7 +829,7 @@ function profileEventRows() {
   const state = getDemoState();
   return uniqueProfileRows([
     ...savedProfileEvents,
-    ...(state.events || []).map((item) => [item.title, item.type || "Evento iAvezzano", "Salvato"]),
+    ...(state.events || []).map((item) => [item.title, item.type || "Evento MyAvezzano", "Salvato"]),
     ...(state.reminders || []).map((item) => [item.title, "Notifica eventi", "Reminder attivo"])
   ]);
 }
@@ -912,7 +971,7 @@ function renderUserProfile(panel = "settings") {
   const user = getStoredUser();
   const avatar = user?.avatar || "assets/app-icon.svg";
   document.querySelector("#profileAvatar").src = avatar;
-  document.querySelector("#profileName").textContent = user ? user.name : "Accedi a iAvezzano";
+  document.querySelector("#profileName").textContent = user ? user.name : "Accedi a MyAvezzano";
   document.querySelector("#profileMeta").textContent = user
     ? `${user.provider} - ${user.email || user.phone || "account locale"}`
     : "Crea un account per salvare coupon, eventi e preferenze.";
@@ -977,7 +1036,7 @@ function renderAdminDashboard() {
       <section class="panel admin-hero god-hero">
         <div>
           <p class="eyebrow">GOD mode</p>
-          <h2>Pannello GOD iAvezzano</h2>
+          <h2>Pannello GOD MyAvezzano</h2>
           <p>Controllo riservato all'account admin: utenti, ruoli, contenuti, richieste, sicurezza e dati locali.</p>
         </div>
         <button class="ghost" data-admin-action="logout" type="button">Logout</button>
@@ -992,7 +1051,7 @@ function renderAdminDashboard() {
         <div class="panel-head">
           <div>
             <p class="eyebrow">IA invisibile</p>
-            <h2>iAvezzano Intelligence Layer</h2>
+            <h2>MyAvezzano Intelligence Layer</h2>
           </div>
           <span class="pill success">Attivo</span>
         </div>
@@ -1095,7 +1154,7 @@ function handleAdminAction(button) {
       merchant: getMerchantSubscription(),
       exportedAt: new Date().toISOString()
     };
-    console.info("iAvezzano GOD export", payload);
+    console.info("MyAvezzano GOD export", payload);
     showToast("Export GOD generato in console browser.", "success");
     return;
   }
@@ -1144,7 +1203,7 @@ function handleAdminAction(button) {
 }
 
 const legalCopy = {
-  privacy: ["Privacy Policy", "iAvezzano MVP salva dati account, preferenze, coupon ed eventi in storage locale del browser. In produzione i dati saranno trattati su server sicuro con consenso, finalita esplicite e strumenti di cancellazione."],
+  privacy: ["Privacy Policy", "MyAvezzano MVP salva dati account, preferenze, coupon ed eventi in storage locale del browser. In produzione i dati saranno trattati su server sicuro con consenso, finalita esplicite e strumenti di cancellazione."],
   terms: ["Termini e condizioni", "Il prototipo mostra funzionalita demo per utenti, commercianti e admin. Coupon, pagamenti, prenotazioni e statistiche non generano obblighi reali finche non saranno collegati a servizi certificati."],
   cookies: ["Cookie Policy", "La versione statica non usa cookie di tracciamento proprietari. Usa localStorage per sessione, preferenze, cache demo e PWA. Servizi esterni come mappe o immagini possono applicare proprie policy."]
 };
@@ -1161,7 +1220,7 @@ function renderLegalPanel(tab = "privacy") {
     <h2>${title}</h2>
     <p>${text}</p>
     <div class="settings-list">
-      <div class="profile-row"><div><strong>Titolare demo</strong><span>iAvezzano MVP</span></div><span class="pill">Demo</span></div>
+      <div class="profile-row"><div><strong>Titolare demo</strong><span>MyAvezzano MVP</span></div><span class="pill">Demo</span></div>
       <div class="profile-row"><div><strong>Ultimo aggiornamento</strong><span>5 giugno 2026</span></div><span class="pill success">Attivo</span></div>
     </div>
   `;
@@ -1191,6 +1250,10 @@ function navigationUrl(place) {
   const destination = `${place.lat},${place.lng}`;
   const origin = userPosition ? `&origin=${userPosition.lat},${userPosition.lng}` : "";
   return `https://www.google.com/maps/dir/?api=1${origin}&destination=${destination}&travelmode=walking`;
+}
+
+function isVerifiedPartner(place) {
+  return verifiedPartnerNames.has(place?.name);
 }
 
 function markerTone(place) {
@@ -1310,6 +1373,7 @@ function renderMapBusinessList() {
       <span class="destination-copy">
         <strong>${place.name}</strong>
         <span>${place.category} - ${formatDistance(place)}</span>
+        ${isVerifiedPartner(place) ? `<span class="verified-badge">Partner verificato</span>` : ""}
         <small>${[place.address, place.phone, place.photo ? "Foto reale" : "", place.stats].filter(Boolean).join(" - ")}</small>
       </span>
     </button>
@@ -1469,7 +1533,7 @@ function selectMapPlace(placeId, shouldPan = true) {
 
   document.querySelector("#mapCard").innerHTML = `
     <strong>${place.name}</strong>
-    <span>${[place.category, place.phone, place.photo ? "foto reale" : "", formatDistance(place)].filter(Boolean).join(" · ")}</span>
+    <span>${[place.category, isVerifiedPartner(place) ? "Partner verificato" : "", place.phone, place.photo ? "foto reale" : "", formatDistance(place)].filter(Boolean).join(" · ")}</span>
   `;
   document.querySelector("#navigationLink").href = navigationUrl(place);
   document.querySelector("#mapStatus").textContent = userPosition
@@ -1547,6 +1611,10 @@ function switchView(view, updateHash = true) {
   const targetView = document.querySelector(`#${view}View`);
   if (!targetView) return;
 
+  document.body.classList.forEach((className) => {
+    if (className.startsWith("view-")) document.body.classList.remove(className);
+  });
+  document.body.classList.add(`view-${view}`);
   document.querySelectorAll(".view").forEach((el) => el.classList.remove("active"));
   targetView.classList.add("active");
   document.querySelectorAll(".nav-item").forEach((item) => {
@@ -1578,7 +1646,56 @@ function switchView(view, updateHash = true) {
     renderLegalPanel();
   }
 
+  animateActiveView(targetView);
   closeMobileMenu();
+}
+
+function animateActiveView(scope = document.querySelector(".view.active")) {
+  if (!scope || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const animatedItems = scope.querySelectorAll(`
+    .topbar,
+    .shortcut-card,
+    .post,
+    .panel,
+    .profile-card,
+    .tonight-card,
+    .event-chip,
+    .event-card,
+    .coupon-card,
+    .reward-card,
+    .summer-card,
+    .destination-item,
+    .map-panel,
+    .map-card,
+    .profile-detail-panel,
+    .profile-action-card,
+    .legal-card,
+    .legal-tab,
+    .merchant-pricing-hero,
+    .pricing-card,
+    .admin-hero,
+    .signup-panel,
+    .demo-panel
+  `);
+
+  animatedItems.forEach((item, index) => {
+    item.classList.remove("motion-ready", "motion-item");
+    item.style.setProperty("--stagger", Math.min(index, 16));
+    window.requestAnimationFrame(() => {
+      item.classList.add("motion-item");
+      window.setTimeout(() => item.classList.add("motion-ready"), 620 + Math.min(index, 16) * 42);
+    });
+  });
+}
+
+function animateGlobalSurfaces() {
+  animateActiveView();
+  const topbar = document.querySelector(".topbar");
+  if (topbar) {
+    topbar.classList.remove("motion-ready", "motion-item");
+    topbar.style.setProperty("--stagger", 0);
+    window.requestAnimationFrame(() => topbar.classList.add("motion-item"));
+  }
 }
 
 function setMobileMenu(open) {
@@ -1742,6 +1859,13 @@ function handleAction(button) {
   if (action === "new-campaign") {
     addDemoItem("campaigns", { title: "Nuova campagna demo" });
     showToast("Nuova campagna demo creata.", "success");
+    return;
+  }
+
+  if (action === "summer-plan") {
+    const total = addDemoItem("summerPlans", { title: "Itinerario Estate 2026" });
+    showToast(`Itinerario Estate 2026 creato. Totale: ${total}.`, "success");
+    switchView("map");
   }
 }
 
@@ -1769,7 +1893,7 @@ document.querySelector("#prevOnboarding").addEventListener("click", () => {
 document.querySelector("#nextOnboarding").addEventListener("click", () => {
   if (onboardingIndex === onboardingSteps.length - 1) {
     closeOnboarding(true);
-    showToast("Perfetto, iAvezzano e pronto da esplorare.", "success");
+    showToast("Perfetto, MyAvezzano e pronto da esplorare.", "success");
     return;
   }
   onboardingIndex += 1;
@@ -1859,7 +1983,7 @@ function applySearchFilter() {
   const searchStatus = document.querySelector("#searchStatus");
   const term = searchInput.value.trim().toLowerCase();
   const intents = intelligenceIntent(term);
-  const searchable = document.querySelectorAll(".post, .tonight-card, .event-card, .coupon-card, .reward-card, .destination-item");
+  const searchable = document.querySelectorAll(".post, .tonight-card, .event-card, .coupon-card, .reward-card, .summer-card, .destination-item");
   searchable.forEach((item) => {
     const haystack = `${item.dataset.search || ""} ${item.textContent}`.toLowerCase();
     const relatedPlace = item.dataset.placeId ? mapPlaces.find((place) => place.id === item.dataset.placeId) : null;
@@ -1878,7 +2002,7 @@ function applySearchFilter() {
 
   if (searchStatus) {
     const activeView = document.querySelector(".view.active");
-    const activeResults = [...activeView.querySelectorAll(".post, .tonight-card, .event-card, .coupon-card, .reward-card, .destination-item")]
+    const activeResults = [...activeView.querySelectorAll(".post, .tonight-card, .event-card, .coupon-card, .reward-card, .summer-card, .destination-item")]
       .filter((item) => !item.hidden);
     searchStatus.hidden = !term;
     searchStatus.classList.toggle("is-empty", Boolean(term) && activeResults.length === 0);
@@ -1962,10 +2086,10 @@ document.querySelector("#publishDemo").addEventListener("click", () => {
 
 const authOverlay = document.querySelector("#authOverlay");
 const openSignupButtons = [document.querySelector("#openSignup"), document.querySelector("#openSignupMini")];
-const AUTH_STORAGE_KEY = "iavezzano_user";
-const USERS_STORAGE_KEY = "iavezzano_users_v1";
-const RESET_STORAGE_KEY = "iavezzano_password_resets_v1";
-const MERCHANT_STORAGE_KEY = "iavezzano_merchant_subscription";
+const AUTH_STORAGE_KEY = "myavezzano_user";
+const USERS_STORAGE_KEY = "myavezzano_users_v1";
+const RESET_STORAGE_KEY = "myavezzano_password_resets_v1";
+const MERCHANT_STORAGE_KEY = "myavezzano_merchant_subscription";
 const authFeedback = document.querySelector("#authFeedback");
 const signupCopy = document.querySelector("#signupCopy");
 const phoneField = document.querySelector("#phoneField");
@@ -2031,8 +2155,8 @@ async function seedAdminUser() {
   users.push({
     id: "admin-demo",
     name: "Admin",
-    surname: "iAvezzano",
-    email: "admin@iavezzano.it",
+    surname: "MyAvezzano",
+    email: "admin@myavezzano.it",
     phone: "",
     role: "admin",
     provider: "Email",
@@ -2101,7 +2225,7 @@ function setAuthMode(mode) {
   const user = getStoredUser();
   document.querySelector("#showRegisterMode").classList.toggle("active", mode === "register");
   document.querySelector("#showLoginMode").classList.toggle("active", mode === "login");
-  document.querySelector("#signupTitle").textContent = mode === "login" ? "Accedi a iAvezzano" : "Registrati a iAvezzano";
+  document.querySelector("#signupTitle").textContent = mode === "login" ? "Accedi a MyAvezzano" : "Registrati a MyAvezzano";
   signupCopy.textContent = mode === "login"
     ? "Accedi con email e password per continuare."
     : "Crea il tuo account per salvare eventi, coupon, nuove aperture e reminder cittadini.";
@@ -2122,6 +2246,7 @@ function openSignup(mode = "register") {
   setFeedback(user ? `Accesso attivo come ${user.name}.` : "");
   setAuthMode(user ? "login" : mode);
   updateAuthUi();
+  animateActiveView(authOverlay);
 }
 
 function updateAuthUi() {
@@ -2203,7 +2328,7 @@ document.querySelectorAll("[data-auth-provider]").forEach((button) => {
   button.addEventListener("click", () => {
     completeRegistration(button.dataset.authProvider, {
       name: `${button.dataset.authProvider} User`,
-      email: `${button.dataset.authProvider.toLowerCase()}@demo.iavezzano.it`
+      email: `${button.dataset.authProvider.toLowerCase()}@demo.myavezzano.it`
     });
   });
 });
@@ -2242,7 +2367,7 @@ createAccountButton.addEventListener("click", async () => {
       setFeedback("Accetta privacy e termini per registrarti.", "error");
       return;
     }
-    await completeRegistration("Telefono", { name: name || "Utente iAvezzano", surname, phone });
+    await completeRegistration("Telefono", { name: name || "Utente MyAvezzano", surname, phone });
     return;
   }
 
@@ -2471,7 +2596,200 @@ document.querySelector("#cancelMerchantPlan").addEventListener("click", () => {
   renderMerchantArea();
 });
 
+function initWebglAura() {
+  const canvas = document.querySelector("#webglAura");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!canvas || reduceMotion) return;
+
+  const gl = canvas.getContext("webgl", {
+    alpha: true,
+    antialias: false,
+    depth: false,
+    stencil: false,
+    premultipliedAlpha: false,
+    powerPreference: "high-performance"
+  });
+
+  if (!gl) return;
+
+  const vertexSource = `
+    attribute vec2 a_position;
+    varying vec2 v_uv;
+    void main() {
+      v_uv = a_position * 0.5 + 0.5;
+      gl_Position = vec4(a_position, 0.0, 1.0);
+    }
+  `;
+
+  const fragmentSource = `
+    precision highp float;
+    varying vec2 v_uv;
+    uniform float u_time;
+    uniform vec2 u_resolution;
+    uniform vec2 u_pointer;
+
+    float hash(vec2 p) {
+      p = fract(p * vec2(123.34, 456.21));
+      p += dot(p, p + 45.32);
+      return fract(p.x * p.y);
+    }
+
+    float noise(vec2 p) {
+      vec2 i = floor(p);
+      vec2 f = fract(p);
+      vec2 u = f * f * (3.0 - 2.0 * f);
+      return mix(
+        mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+        mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+        u.y
+      );
+    }
+
+    float fbm(vec2 p) {
+      float value = 0.0;
+      float amplitude = 0.52;
+      mat2 rotate = mat2(0.82, -0.57, 0.57, 0.82);
+      for (int i = 0; i < 5; i++) {
+        value += amplitude * noise(p);
+        p = rotate * p * 2.05 + 0.13;
+        amplitude *= 0.48;
+      }
+      return value;
+    }
+
+    float particleField(vec2 uv, float t) {
+      vec2 grid = uv * vec2(18.0, 10.0);
+      vec2 cell = floor(grid);
+      vec2 local = fract(grid) - 0.5;
+      float seed = hash(cell);
+      vec2 drift = vec2(sin(t * 0.7 + seed * 6.283), cos(t * 0.55 + seed * 4.1)) * 0.22;
+      float d = length(local - drift);
+      return smoothstep(0.115, 0.0, d) * smoothstep(0.42, 1.0, seed);
+    }
+
+    void main() {
+      vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+      vec2 centered = uv - 0.5;
+      centered.x *= u_resolution.x / u_resolution.y;
+
+      vec2 pointer = u_pointer;
+      pointer.x *= u_resolution.x / u_resolution.y;
+      float pointerGlow = smoothstep(0.72, 0.0, distance(centered, pointer));
+
+      float t = u_time * 0.12;
+      float waveA = fbm(centered * 2.2 + vec2(t, -t * 0.5));
+      float waveB = fbm(centered * 4.0 + vec2(-t * 1.3, t * 0.8));
+      float ribbon = smoothstep(0.18, 0.88, waveA + waveB * 0.46);
+      float sweep = smoothstep(0.68, 0.02, abs(centered.y + sin(centered.x * 2.2 + u_time * 0.22) * 0.16));
+      float particles = particleField(uv + vec2(sin(u_time * 0.03), cos(u_time * 0.04)) * 0.03, u_time);
+
+      vec3 blue = vec3(0.10, 0.34, 0.95);
+      vec3 green = vec3(0.05, 0.66, 0.48);
+      vec3 coral = vec3(0.95, 0.26, 0.20);
+      vec3 gold = vec3(1.00, 0.72, 0.23);
+
+      vec3 color = mix(blue, green, smoothstep(-0.45, 0.55, centered.x + waveB * 0.42));
+      color = mix(color, coral, smoothstep(0.68, 1.0, ribbon) * 0.42);
+      color += gold * particles * 0.65;
+      color += vec3(0.40, 0.72, 1.0) * pointerGlow * 0.32;
+      color += vec3(1.0) * sweep * 0.08;
+
+      float alpha = 0.16 + ribbon * 0.28 + sweep * 0.12 + particles * 0.24 + pointerGlow * 0.10;
+      alpha *= smoothstep(1.08, 0.22, length(centered));
+      gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.62));
+    }
+  `;
+
+  function createShader(type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.warn(gl.getShaderInfoLog(shader));
+      gl.deleteShader(shader);
+      return null;
+    }
+    return shader;
+  }
+
+  const vertexShader = createShader(gl.VERTEX_SHADER, vertexSource);
+  const fragmentShader = createShader(gl.FRAGMENT_SHADER, fragmentSource);
+  if (!vertexShader || !fragmentShader) return;
+
+  const program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.warn(gl.getProgramInfoLog(program));
+    return;
+  }
+
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+
+  const positionLocation = gl.getAttribLocation(program, "a_position");
+  const timeLocation = gl.getUniformLocation(program, "u_time");
+  const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+  const pointerLocation = gl.getUniformLocation(program, "u_pointer");
+  const pointer = { x: 0.12, y: -0.16 };
+  let animationFrame = 0;
+  let startTime = performance.now();
+  let isVisible = true;
+
+  function resize() {
+    const ratio = Math.min(window.devicePixelRatio || 1, window.innerWidth < 760 ? 1.15 : 1.55);
+    const width = Math.max(1, Math.floor(window.innerWidth * ratio));
+    const height = Math.max(1, Math.floor(window.innerHeight * ratio));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+      gl.viewport(0, 0, width, height);
+    }
+  }
+
+  function render(now) {
+    if (!isVisible) return;
+    resize();
+    gl.useProgram(program);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform1f(timeLocation, (now - startTime) * 0.001);
+    gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+    gl.uniform2f(pointerLocation, pointer.x, pointer.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    animationFrame = requestAnimationFrame(render);
+  }
+
+  function updatePointer(clientX, clientY) {
+    pointer.x = clientX / window.innerWidth - 0.5;
+    pointer.y = 0.5 - clientY / window.innerHeight;
+  }
+
+  window.addEventListener("pointermove", (event) => updatePointer(event.clientX, event.clientY), { passive: true });
+  window.addEventListener("resize", resize, { passive: true });
+  document.addEventListener("visibilitychange", () => {
+    isVisible = !document.hidden;
+    if (isVisible) {
+      startTime = performance.now();
+      animationFrame = requestAnimationFrame(render);
+    } else {
+      cancelAnimationFrame(animationFrame);
+    }
+  });
+
+  document.body.classList.add("webgl-ready");
+  animationFrame = requestAnimationFrame(render);
+}
+
 async function bootApp() {
+  initWebglAura();
   await seedAdminUser();
   render();
   renderLegalPanel();

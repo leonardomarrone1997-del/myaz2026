@@ -1,8 +1,8 @@
 {
-  "name": "iAvezzano",
-  "short_name": "iAvezzano",
+  "name": "MyAvezzano",
+  "short_name": "MyAvezzano",
   "description": "Guida cittadina per eventi, sconti, nuove aperture, coupon e attivita ad Avezzano.",
-  "id": "/iavezzano/",
+  "id": "/myavezzano/",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

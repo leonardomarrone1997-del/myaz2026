@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>iAvezzano MVP</title>
+    <title>MyAvezzano MVP</title>
     <meta name="description" content="Guida cittadina per eventi, sconti, nuove aperture, coupon e attivita ad Avezzano." />
     <meta name="theme-color" content="#f7f8fb" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="iAvezzano" />
+    <meta name="apple-mobile-web-app-title" content="MyAvezzano" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="assets/app-icon.svg" />
@@ -16,9 +16,10 @@
     <link rel="preconnect" href="https://unpkg.com" crossorigin />
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="styles.css?v=32" />
+    <link rel="stylesheet" href="styles.css?v=39" />
   </head>
   <body>
+    <canvas class="webgl-aura" id="webglAura" aria-hidden="true"></canvas>
     <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Apri menu" aria-controls="mainNav" aria-expanded="false">
       <span></span>
       <span></span>
@@ -28,15 +29,16 @@
     <div class="app-shell">
       <aside class="sidebar" aria-label="Navigazione principale">
         <div class="brand">
-          <div class="brand-mark"><img src="assets/app-icon.svg" alt="iAvezzano" /></div>
+          <div class="brand-mark"><img src="assets/app-icon.svg" alt="MyAvezzano" /></div>
           <div>
-            <strong>iAvezzano</strong>
+            <strong>MyAvezzano</strong>
           </div>
         </div>
 
         <nav class="nav" id="mainNav">
           <button class="nav-item active" data-view="feed" type="button">Oggi</button>
           <button class="nav-item" data-view="map" type="button">Mappa</button>
+          <button class="nav-item" data-view="summer" type="button">☀ Estate 2026</button>
           <button class="nav-item" data-view="events" type="button">Eventi</button>
           <button class="nav-item" data-view="coupons" type="button">Coupon</button>
           <button class="nav-item" data-view="loyalty" type="button">Punti e premi</button>
@@ -54,7 +56,7 @@
       <main class="main">
         <header class="topbar">
           <div>
-            <p class="eyebrow">iAvezzano live</p>
+            <p class="eyebrow">MyAvezzano live</p>
             <h1 id="pageTitle">Cosa succede ad Avezzano</h1>
             <p class="topbar-copy">Eventi, sconti, nuove aperture e attivita vicine in un'unica vista cittadina.</p>
           </div>
@@ -93,9 +95,9 @@
             </section>
             <aside class="right-rail">
               <div class="profile-card">
-                <img src="assets/app-icon.svg" alt="iAvezzano" />
+                <img src="assets/app-icon.svg" alt="MyAvezzano" />
                 <div>
-                  <strong>iAvezzano</strong>
+                  <strong>MyAvezzano</strong>
                   <span>La tua guida rapida per vivere Avezzano</span>
                 </div>
                 <button class="ghost compact-button" id="openSignupMini" type="button">Accedi</button>
@@ -177,6 +179,18 @@
           <div id="eventsGrid" class="cards-grid"></div>
         </section>
 
+        <section class="view" id="summerView">
+          <div class="summer-hero">
+            <div>
+              <p class="eyebrow">☀ Estate 2026</p>
+              <h2>Avezzano sotto il sole</h2>
+              <p>Eventi, locali, shopping, promo e tappe fresche per vivere la citta nei mesi estivi.</p>
+            </div>
+            <button class="primary-action" data-action="summer-plan" type="button">Crea itinerario</button>
+          </div>
+          <div class="summer-grid" id="summerGrid"></div>
+        </section>
+
         <section class="view" id="couponsView">
           <div class="section-head">
             <div>
@@ -214,7 +228,7 @@
                 <input id="profilePhotoInput" type="file" accept="image/*" hidden />
                 <div>
                   <p class="eyebrow">Profilo utente</p>
-                  <h2 id="profileName">Accedi a iAvezzano</h2>
+                  <h2 id="profileName">Accedi a MyAvezzano</h2>
                   <p id="profileMeta">Crea un account per salvare coupon, eventi e preferenze.</p>
                 </div>
               </div>
@@ -269,7 +283,7 @@
             <section class="merchant-pricing-hero">
               <div>
                 <p class="eyebrow">Per commercianti</p>
-                <h2>Crea il tuo negozio su iAvezzano</h2>
+                <h2>Crea il tuo negozio su MyAvezzano</h2>
                 <p>Pubblica eventi, coupon, nuove aperture, foto e offerte. Tutte le attivita commerciali accedono con un piano a pagamento.</p>
               </div>
               <div class="price-badge">
@@ -411,7 +425,7 @@
           <button data-view-target="legal" data-legal-target="privacy" type="button">Privacy</button>
           <button data-view-target="legal" data-legal-target="terms" type="button">Termini</button>
           <button data-view-target="legal" data-legal-target="cookies" type="button">Cookie</button>
-          <span>iAvezzano MVP - dati demo e storage locale</span>
+          <span>MyAvezzano MVP - dati demo e storage locale</span>
         </footer>
       </main>
     </div>
@@ -420,10 +434,10 @@
       <section class="signup-panel" role="dialog" aria-modal="true" aria-labelledby="signupTitle">
         <button class="close-button" id="closeSignup" type="button" aria-label="Chiudi">x</button>
         <div class="signup-brand">
-          <img src="assets/app-icon.svg" alt="iAvezzano" />
+          <img src="assets/app-icon.svg" alt="MyAvezzano" />
           <div>
             <p class="eyebrow">Benvenuto</p>
-            <h2 id="signupTitle">Registrati a iAvezzano</h2>
+            <h2 id="signupTitle">Registrati a MyAvezzano</h2>
           </div>
         </div>
         <p class="signup-copy" id="signupCopy">Crea il tuo account o accedi per salvare eventi, coupon e preferenze.</p>
@@ -470,7 +484,7 @@
         <button class="primary-action full-button" id="loginAccount" type="button" hidden>Accedi</button>
         <button class="ghost full-button" id="recoverPassword" type="button" hidden>Recupera password</button>
         <button class="ghost full-button logout-button" id="logoutAccount" type="button" hidden>Esci dall'account</button>
-        <p class="legal">Admin test: admin@iavezzano.it / Admin123!</p>
+        <p class="legal">Admin test: admin@myavezzano.it / Admin123!</p>
       </section>
     </div>
 
@@ -478,10 +492,10 @@
       <section class="demo-panel" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
         <button class="close-button" id="closeOnboarding" type="button" aria-label="Chiudi">x</button>
         <div class="demo-visual">
-          <img src="assets/app-icon.svg" alt="iAvezzano" />
+          <img src="assets/app-icon.svg" alt="MyAvezzano" />
           <div>
             <p class="eyebrow" id="onboardingEyebrow">Demo guidata</p>
-            <h2 id="onboardingTitle">Benvenuto su iAvezzano</h2>
+            <h2 id="onboardingTitle">Benvenuto su MyAvezzano</h2>
           </div>
         </div>
         <div class="demo-progress" aria-hidden="true"><span id="onboardingProgress"></span></div>
@@ -501,6 +515,6 @@
     <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
     <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script defer src="app.js?v=32"></script>
+    <script defer src="app.js?v=39"></script>
   </body>
 </html>
