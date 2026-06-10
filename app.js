@@ -246,6 +246,7 @@ const MAX_REAL_PLACES = 120;
 const wikidataImageCache = new Map();
 const DEMO_STATE_KEY = "myavezzano_demo_state";
 const ONBOARDING_KEY = "myavezzano_onboarding_seen";
+const THEME_STORAGE_KEY = "myavezzano_theme";
 
 const categoryImages = {
   "Ristorante": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
@@ -1786,6 +1787,33 @@ function animateGlobalSurfaces() {
   }
 }
 
+function preferredTheme() {
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  if (stored === "dark" || stored === "light") return stored;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function applyTheme(theme = preferredTheme()) {
+  const isDark = theme === "dark";
+  document.body.classList.toggle("theme-dark", isDark);
+  document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#07111f" : "#f7f8fb");
+  const toggle = document.querySelector("#themeToggle");
+  const label = document.querySelector("#themeToggleLabel");
+  if (toggle) {
+    toggle.setAttribute("aria-pressed", String(isDark));
+    toggle.setAttribute("aria-label", isDark ? "Attiva tema giorno" : "Attiva tema notturno");
+  }
+  if (label) label.textContent = isDark ? "Giorno" : "Notte";
+}
+
+function toggleTheme() {
+  const nextTheme = document.body.classList.contains("theme-dark") ? "light" : "dark";
+  localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+  applyTheme(nextTheme);
+  showToast(nextTheme === "dark" ? "Tema notturno attivato." : "Tema giorno attivato.", "success");
+}
+
 function stampCityArtifacts(scope = document) {
   const items = scope.querySelectorAll(".post, .event-card, .coupon-card, .reward-card, .summer-card, .destination-item, .profile-action-card, .pricing-card");
   items.forEach((item, index) => {
@@ -3048,6 +3076,7 @@ function initWebglAura() {
 }
 
 async function bootApp() {
+  applyTheme();
   initWebglAura();
   await seedAdminUser();
   render();
@@ -3073,5 +3102,7 @@ async function bootApp() {
     });
   }
 }
+
+document.querySelector("#themeToggle")?.addEventListener("click", toggleTheme);
 
 bootApp();

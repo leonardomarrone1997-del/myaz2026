@@ -62,6 +62,7 @@ Questa versione resta una PWA statica. Il database demo usa `localStorage` con q
 
 - `myavezzano_users_v1`
 - `myavezzano_user`
+- `myavezzano_theme`
 - `myavezzano_password_resets_v1`
 - `myavezzano_demo_state`
 - `myavezzano_merchant_subscription`

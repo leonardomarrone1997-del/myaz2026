@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://unpkg.com" crossorigin />
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="styles.css?v=44" />
+    <link rel="stylesheet" href="styles.css?v=46" />
   </head>
   <body>
     <canvas class="webgl-aura" id="webglAura" aria-hidden="true"></canvas>
@@ -79,6 +79,10 @@
                 <span>Avezzano - demo</span>
               </div>
             </div>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Attiva tema notturno" aria-pressed="false">
+              <span aria-hidden="true"></span>
+              <strong id="themeToggleLabel">Notte</strong>
+            </button>
             <button class="ghost guide-button" data-action="open-onboarding" type="button">Guida</button>
             <button class="icon-button" data-action="notifications" type="button" title="Notifiche">N</button>
             <button class="primary-action" id="openSignup" type="button">Entra</button>
@@ -556,6 +560,6 @@
     <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
     <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script defer src="app.js?v=44"></script>
+    <script defer src="app.js?v=46"></script>
   </body>
 </html>
