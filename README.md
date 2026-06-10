@@ -65,6 +65,7 @@ Questa versione resta una PWA statica. Il database demo usa `localStorage` con q
 - `myavezzano_password_resets_v1`
 - `myavezzano_demo_state`
 - `myavezzano_merchant_subscription`
+- `myavezzano_merchant_notifications_v1`
 
 Le password email/password vengono salvate come hash SHA-256 con salt tramite Web Crypto. Per produzione reale bisogna migrare utenti, ruoli, sessioni, reset password e admin verso backend API con database server-side, token/sessioni sicuri, rate limit e audit log.
 

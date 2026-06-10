@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://unpkg.com" crossorigin />
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="styles.css?v=39" />
+    <link rel="stylesheet" href="styles.css?v=44" />
   </head>
   <body>
     <canvas class="webgl-aura" id="webglAura" aria-hidden="true"></canvas>
@@ -56,9 +56,15 @@
       <main class="main">
         <header class="topbar">
           <div>
-            <p class="eyebrow">MyAvezzano live</p>
+            <p class="eyebrow" id="pageEyebrow">MyAvezzano live</p>
             <h1 id="pageTitle">Cosa succede ad Avezzano</h1>
-            <p class="topbar-copy">Eventi, sconti, nuove aperture e attivita vicine in un'unica vista cittadina.</p>
+            <p class="topbar-copy" id="pageCopy">Eventi, sconti, nuove aperture e attivita vicine in un'unica vista cittadina.</p>
+            <div class="city-signature" aria-label="Coordinate sezione">
+              <span id="pageCode">AVZ-00</span>
+              <span id="pageCoords">42.0326 N / 13.4256 E</span>
+              <span id="pageArtifact">Atlante urbano</span>
+              <span id="pagePulse">Live</span>
+            </div>
           </div>
           <div class="top-actions">
             <label class="search">
@@ -319,16 +325,16 @@
                 <button class="primary-action full-button start-plan" data-plan="Pro" data-price="29,99" type="button">Attiva Pro</button>
               </article>
               <article class="pricing-card">
-                <p class="eyebrow">Premium</p>
+                <p class="eyebrow">Gold</p>
                 <h2>59,99 EUR/mese</h2>
-                <p>Per campagne locali, sponsorizzazioni e massima visibilita cittadina.</p>
+                <p>Per campagne locali, notifiche web app e massima visibilita cittadina.</p>
                 <ul>
                   <li>Posizionamento prioritario</li>
-                  <li>Campagne push demo</li>
+                  <li>Notifiche promozionali web app</li>
                   <li>Analytics avanzate</li>
                   <li>Supporto prioritario</li>
                 </ul>
-                <button class="primary-action full-button start-plan" data-plan="Premium" data-price="59,99" type="button">Attiva Premium</button>
+                <button class="primary-action full-button start-plan" data-plan="Gold" data-price="59,99" type="button">Attiva Gold</button>
               </article>
             </section>
 
@@ -390,6 +396,41 @@
                 <button class="ghost" data-action="create-coupon" type="button">Coupon QR</button>
                 <button class="primary-action" id="publishDemo" type="button">Pubblica</button>
               </div>
+            </section>
+
+            <section class="panel merchant-notification-panel" id="merchantNotificationPanel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Canale Gold</p>
+                  <h2>Notifica promozionale</h2>
+                </div>
+                <span class="pill warning" id="merchantNotificationGate">Gold</span>
+              </div>
+              <div class="notification-composer">
+                <label class="field">
+                  <span>Titolo notifica</span>
+                  <input id="merchantNotificationTitle" type="text" maxlength="64" placeholder="Es. Aperitivo 2x1 stasera" />
+                </label>
+                <label class="field">
+                  <span>Messaggio</span>
+                  <textarea id="merchantNotificationBody" maxlength="160" placeholder="Scrivi una promo chiara, senza parole offensive."></textarea>
+                </label>
+                <label class="field">
+                  <span>Target</span>
+                  <select id="merchantNotificationTarget">
+                    <option value="nearby">Utenti vicino al negozio</option>
+                    <option value="saved">Utenti che salvano coupon</option>
+                    <option value="events">Utenti interessati a eventi</option>
+                    <option value="all">Tutti gli utenti demo</option>
+                  </select>
+                </label>
+                <div class="auth-feedback" id="merchantNotificationFeedback" role="status" aria-live="polite"></div>
+                <div class="composer-actions">
+                  <button class="ghost" id="previewMerchantNotification" type="button">Anteprima</button>
+                  <button class="primary-action" id="sendMerchantNotification" type="button">Invia notifica</button>
+                </div>
+              </div>
+              <div class="notification-log" id="merchantNotificationLog"></div>
             </section>
 
             <section class="panel">
@@ -515,6 +556,6 @@
     <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
     <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script defer src="app.js?v=39"></script>
+    <script defer src="app.js?v=44"></script>
   </body>
 </html>

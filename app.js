@@ -425,17 +425,83 @@ const savedProfileEvents = [
 
 const userPreferences = ["Eventi", "Sconti", "Nuove aperture", "Ristoranti", "Palestre", "Shopping"];
 
+const pageMeta = {
+  feed: {
+    eyebrow: "Atlante quotidiano",
+    title: "Avezzano, oggi, senza rumore",
+    copy: "Una prima pagina cittadina: aperture, luoghi utili, segnali commerciali e cose da fare ordinate per valore reale, non per infinito scroll."
+  },
+  map: {
+    eyebrow: "Cartografia viva",
+    title: "La città diventa navigabile",
+    copy: "Punti reali, partner verificati e percorsi rapidi: la mappa non decora, serve a trasformare l'interesse in movimento."
+  },
+  events: {
+    eyebrow: "Palinsesto urbano",
+    title: "La sera ha una regia",
+    copy: "Eventi e serate letti come una programmazione: orari, ritmo, prenotazioni demo e reminder senza dispersione."
+  },
+  coupons: {
+    eyebrow: "Valore immediato",
+    title: "Sconti che sembrano oggetti",
+    copy: "Ogni coupon e trattato come un pass: leggibile, riscattabile, salvabile, con QR e punti come parte dell'esperienza."
+  },
+  loyalty: {
+    eyebrow: "Credito locale",
+    title: "La fedeltà diventa patrimonio",
+    copy: "Punti, premi e vantaggi visualizzati come una piccola dashboard finanziaria della vita in città."
+  },
+  profile: {
+    eyebrow: "Pass personale",
+    title: "Il tuo archivio di città",
+    copy: "Preferenze, eventi, coupon, profilo e attività salvate convergono in una sola area personale."
+  },
+  merchant: {
+    eyebrow: "Sistema commercianti",
+    title: "Apri una presenza che lavora",
+    copy: "Non una scheda statica: un pannello per pubblicare offerte, leggere segnali e trasformare visibilità in azioni."
+  },
+  admin: {
+    eyebrow: "Pannello GOD",
+    title: "Regia operativa MyAvezzano",
+    copy: "Utenti, contenuti, insight invisibili e strumenti di controllo raccolti in una cabina di comando essenziale."
+  },
+  summer: {
+    eyebrow: "Estate 2026",
+    title: "La stagione come percorso",
+    copy: "Serate, negozi, ristoranti e tappe leggere organizzati come un itinerario estivo, non come una lista."
+  },
+  legal: {
+    eyebrow: "Fiducia e regole",
+    title: "Chiarezza prima della crescita",
+    copy: "Privacy, termini e cookie restano leggibili, asciutti e vicini al prodotto: niente burocrazia nascosta."
+  }
+};
+
 const titles = {
-  feed: "Cosa succede ad Avezzano",
-  map: "Mappa interattiva",
-  events: "Eventi",
-  coupons: "Coupon digitali",
-  loyalty: "Sistema fedelta",
-  profile: "Profilo utente",
-  merchant: "Crea il tuo negozio",
-  admin: "Admin panel",
-  summer: "Estate 2026",
-  legal: "Privacy e termini"
+  feed: pageMeta.feed.title,
+  map: pageMeta.map.title,
+  events: pageMeta.events.title,
+  coupons: pageMeta.coupons.title,
+  loyalty: pageMeta.loyalty.title,
+  profile: pageMeta.profile.title,
+  merchant: pageMeta.merchant.title,
+  admin: pageMeta.admin.title,
+  summer: pageMeta.summer.title,
+  legal: pageMeta.legal.title
+};
+
+const citySignatures = {
+  feed: ["AVZ-01", "Centro / 42.0326 N", "Prima pagina urbana", "12 segnali"],
+  map: ["AVZ-02", "13.4256 E / raggio 2 km", "Carta operativa", "OSM live"],
+  events: ["AVZ-03", "Dalle 19:30 / notte", "Palinsesto", "Serate"],
+  coupons: ["AVZ-04", "Valore / QR / punti", "Pass riscattabile", "Attivo"],
+  loyalty: ["AVZ-05", "Saldo / premi / progressi", "Credito locale", "Punti"],
+  profile: ["AVZ-06", "ID personale / archivio", "Tessera cittadina", "Privato"],
+  merchant: ["AVZ-07", "Scheda / campagne / checkout", "Console business", "B2B"],
+  admin: ["AVZ-GOD", "Insight / utenti / controllo", "Cabina di regia", "Riservato"],
+  summer: ["AVZ-26", "Estate / tappe / luce", "Itinerario", "2026"],
+  legal: ["AVZ-00", "Privacy / termini / cookie", "Registro fiducia", "Chiaro"]
 };
 
 const onboardingSteps = [
@@ -791,6 +857,7 @@ function render() {
   renderMerchantArea();
   applySearchFilter();
   hydrateLazyMedia(document.querySelector(".view.active") || document, true);
+  stampCityArtifacts(document);
   animateGlobalSurfaces();
 }
 
@@ -1000,6 +1067,18 @@ function renderMerchantArea() {
   document.querySelector("#merchantSubscriptionTitle").textContent = `${subscription.plan} - ${subscription.businessName}`;
   document.querySelector("#merchantSubscriptionMeta").textContent = `${subscription.price} EUR/mese - ${subscription.category} - attivo dal ${subscription.startedAt}`;
   document.querySelector("#merchantPlanPill").textContent = subscription.plan;
+  const notificationPanel = document.querySelector("#merchantNotificationPanel");
+  const notificationGate = document.querySelector("#merchantNotificationGate");
+  const isGold = isGoldMerchant(subscription);
+  if (notificationPanel) notificationPanel.classList.toggle("is-locked", !isGold);
+  if (notificationGate) {
+    notificationGate.textContent = isGold ? "Gold attivo" : "Richiede Gold";
+    notificationGate.className = `pill ${isGold ? "success" : "warning"}`;
+  }
+  document.querySelectorAll("#merchantNotificationTitle, #merchantNotificationBody, #merchantNotificationTarget, #sendMerchantNotification, #previewMerchantNotification")
+    .forEach((item) => { item.disabled = !isGold; });
+  setMerchantNotificationFeedback(isGold ? "Canale notifiche pronto. Il filtro contenuti e attivo." : "Le notifiche promozionali sono disponibili solo per account Gold.", isGold ? "success" : "info");
+  renderMerchantNotificationLog();
 }
 
 function isAdmin(user = getStoredUser()) {
@@ -1622,7 +1701,15 @@ function switchView(view, updateHash = true) {
     item.classList.toggle("active", isActive);
     item.toggleAttribute("aria-current", isActive);
   });
-  document.querySelector("#pageTitle").textContent = titles[view];
+  const meta = pageMeta[view] || pageMeta.feed;
+  const signature = citySignatures[view] || citySignatures.feed;
+  document.querySelector("#pageEyebrow").textContent = meta.eyebrow;
+  document.querySelector("#pageTitle").textContent = meta.title;
+  document.querySelector("#pageCopy").textContent = meta.copy;
+  document.querySelector("#pageCode").textContent = signature[0];
+  document.querySelector("#pageCoords").textContent = signature[1];
+  document.querySelector("#pageArtifact").textContent = signature[2];
+  document.querySelector("#pagePulse").textContent = signature[3];
   hydrateLazyMedia(targetView, true);
   applySearchFilter();
 
@@ -1646,6 +1733,7 @@ function switchView(view, updateHash = true) {
     renderLegalPanel();
   }
 
+  stampCityArtifacts(targetView);
   animateActiveView(targetView);
   closeMobileMenu();
 }
@@ -1698,15 +1786,29 @@ function animateGlobalSurfaces() {
   }
 }
 
+function stampCityArtifacts(scope = document) {
+  const items = scope.querySelectorAll(".post, .event-card, .coupon-card, .reward-card, .summer-card, .destination-item, .profile-action-card, .pricing-card");
+  items.forEach((item, index) => {
+    item.style.setProperty("--artifact-index", `"${String(index + 1).padStart(2, "0")}"`);
+  });
+}
+
 function setMobileMenu(open) {
   const toggle = document.querySelector("#mobileMenuToggle");
   const backdrop = document.querySelector("#mobileMenuBackdrop");
-  document.body.classList.toggle("menu-open", open);
+  if (open && backdrop) backdrop.hidden = false;
+  window.requestAnimationFrame(() => {
+    document.body.classList.toggle("menu-open", open);
+  });
   if (toggle) {
     toggle.setAttribute("aria-expanded", String(open));
     toggle.setAttribute("aria-label", open ? "Chiudi menu" : "Apri menu");
   }
-  if (backdrop) backdrop.hidden = !open;
+  if (!open && backdrop) {
+    window.setTimeout(() => {
+      if (!document.body.classList.contains("menu-open")) backdrop.hidden = true;
+    }, 180);
+  }
 }
 
 function closeMobileMenu() {
@@ -2084,12 +2186,86 @@ document.querySelector("#publishDemo").addEventListener("click", () => {
   setTimeout(() => { button.textContent = "Pubblica"; }, 1600);
 });
 
+function merchantNotificationDraft() {
+  const title = document.querySelector("#merchantNotificationTitle")?.value.trim() || "";
+  const body = document.querySelector("#merchantNotificationBody")?.value.trim() || "";
+  const target = document.querySelector("#merchantNotificationTarget")?.value || "nearby";
+  return { title, body, target };
+}
+
+function validateMerchantNotificationDraft({ title, body }) {
+  if (title.length < 4) return "Inserisci un titolo di almeno 4 caratteri.";
+  if (body.length < 12) return "Inserisci un messaggio di almeno 12 caratteri.";
+  const blocked = findBlockedWords(`${title} ${body}`);
+  if (blocked.length) return `Messaggio bloccato: contiene linguaggio offensivo (${blocked.join(", ")}).`;
+  return "";
+}
+
+document.querySelector("#previewMerchantNotification")?.addEventListener("click", () => {
+  const subscription = getMerchantSubscription();
+  if (!isGoldMerchant(subscription)) {
+    setMerchantNotificationFeedback("Serve un account Gold per usare le notifiche promozionali.", "error");
+    return;
+  }
+  const draft = merchantNotificationDraft();
+  const error = validateMerchantNotificationDraft(draft);
+  if (error) {
+    setMerchantNotificationFeedback(error, "error");
+    return;
+  }
+  showToast(`${draft.title}: ${draft.body}`, "success");
+  setMerchantNotificationFeedback("Anteprima pulita: nessuna parola bloccata trovata.", "success");
+});
+
+document.querySelector("#sendMerchantNotification")?.addEventListener("click", async () => {
+  const user = getStoredUser();
+  const subscription = getMerchantSubscription();
+  if (!user || !subscription || subscription.userId !== user.id) {
+    setMerchantNotificationFeedback("Accedi con l'account commerciante per inviare notifiche.", "error");
+    openSignup("login");
+    return;
+  }
+  if (!isGoldMerchant(subscription)) {
+    setMerchantNotificationFeedback("Funzione riservata agli account Gold.", "error");
+    return;
+  }
+
+  const draft = merchantNotificationDraft();
+  const error = validateMerchantNotificationDraft(draft);
+  if (error) {
+    setMerchantNotificationFeedback(error, "error");
+    return;
+  }
+
+  const channel = await maybeSendBrowserNotification(draft.title, draft.body);
+  const notification = {
+    id: randomId("notification"),
+    merchantId: user.id,
+    businessName: subscription.businessName,
+    title: draft.title,
+    body: draft.body,
+    target: draft.target,
+    targetLabel: targetLabel(draft.target),
+    channel,
+    status: channel === "browser" ? "Inviata" : "Web app",
+    createdAt: new Date().toLocaleString("it-IT")
+  };
+  const notifications = getMerchantNotifications();
+  notifications.push(notification);
+  saveMerchantNotifications(notifications);
+  addDemoItem("merchantNotifications", { title: draft.title, type: notification.targetLabel });
+  renderMerchantNotificationLog();
+  setMerchantNotificationFeedback(`Notifica approvata e inviata via ${channel === "browser" ? "browser" : "web app demo"}.`, "success");
+  showToast(`Promo Gold inviata: ${draft.title}`, "success");
+});
+
 const authOverlay = document.querySelector("#authOverlay");
 const openSignupButtons = [document.querySelector("#openSignup"), document.querySelector("#openSignupMini")];
 const AUTH_STORAGE_KEY = "myavezzano_user";
 const USERS_STORAGE_KEY = "myavezzano_users_v1";
 const RESET_STORAGE_KEY = "myavezzano_password_resets_v1";
 const MERCHANT_STORAGE_KEY = "myavezzano_merchant_subscription";
+const MERCHANT_NOTIFICATIONS_KEY = "myavezzano_merchant_notifications_v1";
 const authFeedback = document.querySelector("#authFeedback");
 const signupCopy = document.querySelector("#signupCopy");
 const phoneField = document.querySelector("#phoneField");
@@ -2106,6 +2282,7 @@ const recoverPasswordButton = document.querySelector("#recoverPassword");
 const logoutAccountButton = document.querySelector("#logoutAccount");
 const merchantCheckout = document.querySelector("#merchantCheckout");
 const merchantCheckoutFeedback = document.querySelector("#merchantCheckoutFeedback");
+const merchantNotificationFeedback = document.querySelector("#merchantNotificationFeedback");
 let selectedMerchantPlan = { plan: "Starter", price: "12,99" };
 let authMode = "register";
 
@@ -2203,6 +2380,88 @@ function getMerchantSubscription() {
 
 function saveMerchantSubscription(subscription) {
   localStorage.setItem(MERCHANT_STORAGE_KEY, JSON.stringify(subscription));
+}
+
+const profanityDictionary = [
+  "cazzo", "cazz", "merda", "stronzo", "stronza", "vaffanculo", "fanculo",
+  "puttana", "troia", "bastardo", "bastarda", "coglione", "coglioni",
+  "cretino", "deficiente", "porco", "schifo"
+];
+
+function normalizeModerationText(value = "") {
+  return String(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[0@]/g, "o")
+    .replace(/[1!|]/g, "i")
+    .replace(/[3]/g, "e")
+    .replace(/[4]/g, "a")
+    .replace(/[5$]/g, "s")
+    .replace(/[^a-z0-9]+/g, " ");
+}
+
+function findBlockedWords(value = "") {
+  const normalized = normalizeModerationText(value);
+  return profanityDictionary.filter((word) => new RegExp(`\\b${word}\\b`, "i").test(normalized));
+}
+
+function isGoldMerchant(subscription) {
+  return subscription?.plan === "Gold" || subscription?.plan === "Premium";
+}
+
+function getMerchantNotifications() {
+  return readJson(MERCHANT_NOTIFICATIONS_KEY, []);
+}
+
+function saveMerchantNotifications(notifications) {
+  writeJson(MERCHANT_NOTIFICATIONS_KEY, notifications);
+}
+
+function setMerchantNotificationFeedback(message, type = "info") {
+  if (!merchantNotificationFeedback) return;
+  merchantNotificationFeedback.textContent = message;
+  merchantNotificationFeedback.className = `auth-feedback ${type}`;
+}
+
+function renderMerchantNotificationLog() {
+  const log = document.querySelector("#merchantNotificationLog");
+  if (!log) return;
+  const notifications = getMerchantNotifications().slice(-4).reverse();
+  log.innerHTML = notifications.length ? notifications.map((item) => `
+    <div class="notification-log-item">
+      <div>
+        <strong>${item.title}</strong>
+        <span>${item.targetLabel} - ${item.createdAt}</span>
+      </div>
+      <span class="pill success">${item.status}</span>
+    </div>
+  `).join("") : `<p class="muted">Nessuna notifica Gold inviata in questa demo.</p>`;
+}
+
+function targetLabel(value) {
+  return {
+    nearby: "Utenti vicino al negozio",
+    saved: "Utenti coupon",
+    events: "Utenti eventi",
+    all: "Tutti gli utenti demo"
+  }[value] || "Utenti demo";
+}
+
+async function maybeSendBrowserNotification(title, body) {
+  if (!("Notification" in window)) return "web-app";
+  if (Notification.permission === "default") {
+    await Notification.requestPermission();
+  }
+  if (Notification.permission === "granted") {
+    new Notification(title, {
+      body,
+      icon: "assets/app-icon.svg",
+      tag: `myavezzano-merchant-${Date.now()}`
+    });
+    return "browser";
+  }
+  return "web-app";
 }
 
 function setFeedback(message, type = "info") {
