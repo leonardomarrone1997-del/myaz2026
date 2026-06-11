@@ -1,4 +1,4 @@
-const CACHE_NAME = "myavezzano-v46";
+const CACHE_NAME = "myavezzano-v59";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -27,11 +27,22 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
+          return response;
+        })
+        .catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(event.request)
+      const fetched = fetch(event.request)
         .then((response) => {
           const copy = response.clone();
           if (response.ok && event.request.url.startsWith(self.location.origin)) {
@@ -39,12 +50,9 @@ self.addEventListener("fetch", (event) => {
           }
           return response;
         })
-        .catch(() => {
-          if (event.request.mode === "navigate") {
-            return caches.match("./index.html");
-          }
-          return Response.error();
-        });
+        .catch(() => cached || Response.error());
+
+      return cached || fetched;
     })
   );
 });

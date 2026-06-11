@@ -1,6 +1,6 @@
-# MyAvezzano MVP
+# MyAvezzano / LocalHub
 
-Prototype web standalone della piattaforma MyAvezzano.
+Prototype web standalone della piattaforma MyAvezzano: un atlante locale per eventi, luoghi, coupon, servizi utili, profilo utente, commercianti e admin.
 
 ## Cosa contiene
 
@@ -19,6 +19,36 @@ Prototype web standalone della piattaforma MyAvezzano.
 - Pannello profilo utente con foto profilo, impostazioni, coupon, eventi, preferenze e creazione negozio.
 - Pulsanti principali collegati a flussi demo con toast, salvataggi locali, prenotazioni, reminder, filtri, strumenti commerciante e riepilogo nel profilo utente.
 - Demo guidata al primo ingresso, riapribile dal pulsante Guida e dalle impostazioni del profilo.
+- Dashboard locale in home con quick search, smart cards, servizi utili, stato giornata e navigazione mobile app-like.
+- Transizione tema giorno/notte con passaggio tramonto/alba e rispetto di `prefers-reduced-motion`.
+- Atmosphere FX leggero: rondine rara nel tema giorno, stelle/scia notturna rara, pulviscolo estivo quasi invisibile, pausa automatica quando la tab non e visibile.
+
+## Audit prodotto - versione corrente
+
+### Funziona bene
+
+- PWA statica senza build, facile da provare e pubblicare.
+- Mappa reale con OpenStreetMap, cache e apertura Google Maps.
+- Account demo, admin nascosto, profilo, coupon, eventi e merchant dashboard gia collegati a flussi locali.
+- Direzione visiva "Atlante Vivo" con coordinate, pass, marker, WebGL e tema dark/light.
+
+### Corretto e migliorato
+
+- Home trasformata in dashboard locale con priorita chiare: cerca, esplora, salva, usa servizi.
+- Navigazione mobile aggiunta come bottom nav, mantenendo menu laterale e profilo in alto.
+- Ricerca globale resa piu visibile con suggerimenti rapidi e stato risultati.
+- Aggiunta sezione "La tua giornata" alimentata da salvataggi, eventi e reminder locali.
+- Footer reso piu professionale e coerente con una piattaforma reale.
+- Service worker aggiornato con navigazioni network-first e fallback offline.
+- Manifest aggiornato con start URL, shortcut Estate 2026 e descrizione piu chiara.
+
+### Da completare per produzione reale
+
+- Backend API, database server-side, sessioni sicure e rate limit.
+- Foto reali proprietarie/CDN per tutte le attivita.
+- Pagamenti reali per commercianti e fatturazione.
+- Push notification reali tramite Web Push/FCM/APNs.
+- Test Lighthouse, accessibilita e dispositivi fisici prima della pubblicazione.
 
 ## Come aprirla
 

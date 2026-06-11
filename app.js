@@ -241,6 +241,17 @@ let userPosition = null;
 let mapMarkers = new Map();
 let realPlacesLoaded = false;
 let isLoadingRealPlaces = false;
+let themeTransitionTimer = 0;
+let installPromptEvent = null;
+const atmosphereTimers = new Set();
+let atmospherePaused = false;
+let searchPlaceholderTimer = 0;
+const searchPlaceholders = [
+  "Cerca locali, eventi, servizi...",
+  "Dove vuoi andare oggi?",
+  "Scopri cosa fare ad Avezzano...",
+  "Prova: aperitivo, coupon, farmacia"
+];
 const OSM_CACHE_KEY = "myavezzano_osm_businesses_v1";
 const MAX_REAL_PLACES = 120;
 const wikidataImageCache = new Map();
@@ -264,11 +275,10 @@ const categoryImages = {
 };
 
 const quickActions = [
-  ["Eventi stasera", "3 serate e 1 live music", "events"],
-  ["Sconti vicini", "Coupon utilizzabili oggi", "coupons"],
-  ["Estate 2026", "Percorsi, serate e promo estive", "summer"],
-  ["Nuove aperture", "Locali e negozi appena aperti", "feed"],
-  ["Pranzo e cena", "Ristoranti con offerte attive", "map"]
+  ["Stasera", "Eventi e musica", "events", "moon"],
+  ["Sconti", "Coupon vicini", "coupons", "percent"],
+  ["Estate", "Agenda 2026", "summer", "sun"],
+  ["Mappa", "Locali reali", "map", "pin"]
 ];
 
 const cityHighlights = [
@@ -375,7 +385,7 @@ const summerHighlights = [
     title: "Shopping fresco in centro",
     type: "Shopping",
     place: "Dell'Olio 1920",
-    text: "Partner verificato con selezione estiva e scheda completa in mappa.",
+    text: "Locale verificato con selezione estiva e scheda completa in mappa.",
     cta: "Apri mappa"
   },
   {
@@ -428,9 +438,9 @@ const userPreferences = ["Eventi", "Sconti", "Nuove aperture", "Ristoranti", "Pa
 
 const pageMeta = {
   feed: {
-    eyebrow: "Atlante quotidiano",
-    title: "Avezzano, oggi, senza rumore",
-    copy: "Una prima pagina cittadina: aperture, luoghi utili, segnali commerciali e cose da fare ordinate per valore reale, non per infinito scroll."
+    eyebrow: "MyAvezzano live",
+    title: "La citta, a portata di giornata",
+    copy: "Eventi, locali, negozi e piccole scoperte di Avezzano raccolti in una home semplice, bella da aprire e veloce da usare."
   },
   map: {
     eyebrow: "Cartografia viva",
@@ -737,13 +747,98 @@ function intelligenceInsights() {
   ];
 }
 
+function smartHomeCards() {
+  const topFood = intelligentPlaces("ristorante aperto", 1)[0];
+  const topShopping = intelligentPlaces("shopping coupon", 1)[0];
+  const liveEvent = tonightEvents[0];
+  return [
+    {
+      label: "Consiglio ora",
+      title: topFood ? topFood.name : "Cena in centro",
+      text: topFood ? `${topFood.category} - ${topFood.distance || "Avezzano"}` : "Apri la mappa e scegli un locale vicino.",
+      action: "open-map-place",
+      place: topFood?.name,
+      cta: "Apri"
+    },
+    {
+      label: "Da non perdere",
+      title: liveEvent?.title || "Eventi stasera",
+      text: liveEvent ? `${liveEvent.place} - ${liveEvent.time}` : "Musica, aperitivi e serate in un solo elenco.",
+      view: "events",
+      cta: "Vedi eventi"
+    },
+    {
+      label: "Vantaggio",
+      title: topShopping ? topShopping.name : "Coupon locali",
+      text: topShopping ? `${topShopping.category} - promo e shopping` : "Sconti e QR pronti da salvare.",
+      view: "coupons",
+      cta: "Scopri"
+    }
+  ];
+}
+
+function renderSmartStrip() {
+  const strip = document.querySelector("#smartStrip");
+  if (!strip) return;
+  strip.innerHTML = smartHomeCards().map((item) => `
+    <article class="smart-card">
+      <span>${item.label}</span>
+      <strong>${item.title}</strong>
+      <small>${item.text}</small>
+      <button ${item.view ? `data-view-target="${item.view}"` : `data-action="${item.action}" data-place="${item.place || ""}"`} type="button">${item.cta}</button>
+    </article>
+  `).join("");
+}
+
+function renderDayPlan() {
+  const grid = document.querySelector("#dayPlanGrid");
+  if (!grid) return;
+  const state = getDemoState();
+  const coupons = profileCouponRows();
+  const events = profileEventRows();
+  const reminders = state.reminders || [];
+  const rows = [
+    {
+      label: "Coupon salvati",
+      value: coupons.length,
+      text: coupons.length ? coupons[0].title : "Salva un vantaggio dalla home.",
+      view: "coupons"
+    },
+    {
+      label: "Eventi in agenda",
+      value: events.length,
+      text: events.length ? events[0].title : "Prenota o salva una serata.",
+      view: "events"
+    },
+    {
+      label: "Reminder",
+      value: reminders.length,
+      text: reminders.length ? "Promemoria attivi per oggi." : "Attiva un reminder per stasera.",
+      action: "create-reminder"
+    }
+  ];
+  grid.innerHTML = rows.map((item) => `
+    <button class="day-plan-item" ${item.view ? `data-view-target="${item.view}"` : `data-action="${item.action}"`} type="button">
+      <span>${item.label}</span>
+      <strong>${item.value}</strong>
+      <small>${item.text}</small>
+    </button>
+  `).join("");
+}
+
 function render() {
-  document.querySelector("#stories").innerHTML = quickActions.map(([title, text, view]) => `
+  document.querySelector("#stories").innerHTML = quickActions.map(([title, text, view, icon]) => `
     <button class="shortcut-card" data-view-target="${view}" type="button">
+      <span class="shortcut-icon shortcut-icon-${icon}" aria-hidden="true"></span>
       <strong>${title}</strong>
       <span>${text}</span>
     </button>
   `).join("");
+
+  renderSmartStrip();
+  renderDayPlan();
+  const homeBusinessCount = document.querySelector("#homeBusinessCount");
+  if (homeBusinessCount) homeBusinessCount.textContent = mapPlaces.length.toLocaleString("it-IT");
 
   document.querySelector("#feedList").innerHTML = cityHighlights.map((item) => {
     const relatedPlace = findPlaceByName(item.place);
@@ -820,7 +915,7 @@ function render() {
           <p>${item.text}</p>
           <div class="summer-meta">
             <span>${item.place}</span>
-            ${verified ? `<span class="verified-badge">Partner verificato</span>` : ""}
+            ${verified ? `<span class="verified-badge" aria-label="Verificato" title="Verificato">✓</span>` : ""}
           </div>
           <div class="post-actions">
             <button data-action="open-map-place" data-place="${item.place}" type="button">${item.cta}</button>
@@ -1035,8 +1130,81 @@ function renderProfilePanel(panel = "settings") {
   if (accountButton) accountButton.addEventListener("click", openSignup);
 }
 
+function prestigeState(user = getStoredUser()) {
+  if (!user) return { level: "Base", progress: 18, points: 0 };
+  if (user.role === "admin") return { level: "GOD", progress: 96, points: 9990 };
+  const basePoints = 1240 + profileCouponRows().length * 110 + profileEventRows().length * 90;
+  const progress = Math.min(92, 42 + Math.round((basePoints % 900) / 18));
+  return { level: basePoints > 1600 ? "Gold" : "Silver", progress, points: basePoints };
+}
+
+function renderTopProfileStatus() {
+  const user = getStoredUser();
+  const state = prestigeState(user);
+  const status = document.querySelector("#topProfileStatus");
+  if (!status) return;
+  document.querySelector("#topProfileAvatar").src = user?.avatar || "assets/app-icon.svg";
+  document.querySelector("#topProfileName").textContent = user ? user.name : "Ospite";
+  document.querySelector("#topProfileLevel").textContent = `${state.level} - ${state.progress}%`;
+  status.style.setProperty("--prestige-progress", `${state.progress}%`);
+  status.classList.toggle("is-admin", user?.role === "admin");
+}
+
+function notificationItems() {
+  const user = getStoredUser();
+  const merchantItems = getMerchantNotifications().slice(-2).reverse().map((item) => ({
+    title: item.title,
+    text: `${item.targetLabel} - ${item.status}`,
+    tone: "gold"
+  }));
+  return [
+    { title: "Aperitivo lungo in centro", text: "Inizia alle 19:30. Puoi salvarlo tra gli eventi.", tone: "event" },
+    { title: "Coupon in scadenza", text: "2x1 aperitivo valido fino alle 20:00.", tone: "coupon" },
+    {
+      title: user ? `Ciao ${user.name}` : "Profilo non attivo",
+      text: user ? "Il tuo livello prestigio e aggiornato." : "Accedi per salvare notifiche e preferenze.",
+      tone: user ? "profile" : "quiet"
+    },
+    ...merchantItems
+  ];
+}
+
+function renderNotificationMenu() {
+  const list = document.querySelector("#notificationMenuList");
+  if (!list) return;
+  list.innerHTML = notificationItems().map((item) => `
+    <button class="notification-menu-item ${item.tone}" data-notification-open type="button">
+      <span aria-hidden="true"></span>
+      <div>
+        <strong>${item.title}</strong>
+        <small>${item.text}</small>
+      </div>
+    </button>
+  `).join("");
+}
+
+function closeNotificationMenu() {
+  document.querySelector("#notificationMenu")?.setAttribute("hidden", "");
+  document.querySelector("#notificationButton")?.setAttribute("aria-expanded", "false");
+}
+
+function toggleNotificationMenu() {
+  const menu = document.querySelector("#notificationMenu");
+  const button = document.querySelector("#notificationButton");
+  if (!menu || !button) return;
+  const willOpen = menu.hasAttribute("hidden");
+  if (willOpen) {
+    renderNotificationMenu();
+    menu.removeAttribute("hidden");
+  } else {
+    menu.setAttribute("hidden", "");
+  }
+  button.setAttribute("aria-expanded", String(willOpen));
+}
+
 function renderUserProfile(panel = "settings") {
   const user = getStoredUser();
+  const prestige = prestigeState(user);
   const avatar = user?.avatar || "assets/app-icon.svg";
   document.querySelector("#profileAvatar").src = avatar;
   document.querySelector("#profileName").textContent = user ? user.name : "Accedi a MyAvezzano";
@@ -1045,11 +1213,12 @@ function renderUserProfile(panel = "settings") {
     : "Crea un account per salvare coupon, eventi e preferenze.";
   document.querySelector("#profileCouponCount").textContent = user ? profileCouponRows().length : 0;
   document.querySelector("#profileEventCount").textContent = user ? profileEventRows().length : 0;
-  document.querySelector("#profilePointCount").textContent = user ? "1.240" : 0;
-  document.querySelector("#profileLevel").textContent = user ? "Gold" : "Base";
+  document.querySelector("#profilePointCount").textContent = user ? prestige.points.toLocaleString("it-IT") : 0;
+  document.querySelector("#profileLevel").textContent = prestige.level;
   document.querySelector("#profileSignupButton").hidden = Boolean(user);
   renderProfileActions();
   renderProfilePanel(panel);
+  renderTopProfileStatus();
 }
 
 function renderMerchantArea() {
@@ -1453,7 +1622,7 @@ function renderMapBusinessList() {
       <span class="destination-copy">
         <strong>${place.name}</strong>
         <span>${place.category} - ${formatDistance(place)}</span>
-        ${isVerifiedPartner(place) ? `<span class="verified-badge">Partner verificato</span>` : ""}
+        ${isVerifiedPartner(place) ? `<span class="verified-badge" aria-label="Verificato" title="Verificato">✓</span>` : ""}
         <small>${[place.address, place.phone, place.photo ? "Foto reale" : "", place.stats].filter(Boolean).join(" - ")}</small>
       </span>
     </button>
@@ -1613,7 +1782,7 @@ function selectMapPlace(placeId, shouldPan = true) {
 
   document.querySelector("#mapCard").innerHTML = `
     <strong>${place.name}</strong>
-    <span>${[place.category, isVerifiedPartner(place) ? "Partner verificato" : "", place.phone, place.photo ? "foto reale" : "", formatDistance(place)].filter(Boolean).join(" · ")}</span>
+      <span>${[place.category, isVerifiedPartner(place) ? "Verificato" : "", place.phone, place.photo ? "foto reale" : "", formatDistance(place)].filter(Boolean).join(" · ")}</span>
   `;
   document.querySelector("#navigationLink").href = navigationUrl(place);
   document.querySelector("#mapStatus").textContent = userPosition
@@ -1698,6 +1867,11 @@ function switchView(view, updateHash = true) {
   document.querySelectorAll(".view").forEach((el) => el.classList.remove("active"));
   targetView.classList.add("active");
   document.querySelectorAll(".nav-item").forEach((item) => {
+    const isActive = item.dataset.view === view;
+    item.classList.toggle("active", isActive);
+    item.toggleAttribute("aria-current", isActive);
+  });
+  document.querySelectorAll(".bottom-nav-item").forEach((item) => {
     const isActive = item.dataset.view === view;
     item.classList.toggle("active", isActive);
     item.toggleAttribute("aria-current", isActive);
@@ -1809,9 +1983,155 @@ function applyTheme(theme = preferredTheme()) {
 
 function toggleTheme() {
   const nextTheme = document.body.classList.contains("theme-dark") ? "light" : "dark";
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+  if (!prefersReducedMotion) {
+    clearTimeout(themeTransitionTimer);
+    document.body.classList.remove("theme-transition", "theme-to-dark", "theme-to-light", "theme-transitioning", "sunset-transition", "sunrise-transition", "night-entering", "day-entering");
+    document.body.offsetHeight;
+    document.body.classList.add(
+      "theme-transition",
+      "theme-transitioning",
+      nextTheme === "dark" ? "theme-to-dark" : "theme-to-light",
+      nextTheme === "dark" ? "sunset-transition" : "sunrise-transition",
+      nextTheme === "dark" ? "night-entering" : "day-entering"
+    );
+    themeTransitionTimer = window.setTimeout(() => {
+      document.body.classList.remove("theme-transition", "theme-to-dark", "theme-to-light", "theme-transitioning", "sunset-transition", "sunrise-transition", "night-entering", "day-entering");
+    }, 1450);
+  }
   applyTheme(nextTheme);
+  updateAtmosphereForTheme();
   showToast(nextTheme === "dark" ? "Tema notturno attivato." : "Tema giorno attivato.", "success");
+}
+
+function respectsReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function clearAtmosphereTimers() {
+  atmosphereTimers.forEach((timer) => clearTimeout(timer));
+  atmosphereTimers.clear();
+}
+
+function scheduleAtmosphere(callback, minDelay = 18000, maxDelay = 36000) {
+  if (atmospherePaused || respectsReducedMotion()) return;
+  const delay = minDelay + Math.random() * (maxDelay - minDelay);
+  const timer = window.setTimeout(() => {
+    atmosphereTimers.delete(timer);
+    callback();
+  }, delay);
+  atmosphereTimers.add(timer);
+}
+
+function atmosphereRoot() {
+  return document.querySelector("#atmosphereFx");
+}
+
+function spawnSwallow() {
+  const root = atmosphereRoot();
+  if (!root || document.body.classList.contains("theme-dark") || atmospherePaused || respectsReducedMotion()) {
+    scheduleSwallow();
+    return;
+  }
+  const bird = document.createElement("span");
+  bird.className = "fx-swallow";
+  bird.style.setProperty("--fly-y", `${9 + Math.random() * 13}vh`);
+  bird.style.setProperty("--fly-duration", `${17 + Math.random() * 8}s`);
+  bird.style.setProperty("--fly-scale", `${0.56 + Math.random() * 0.22}`);
+  root.appendChild(bird);
+  bird.addEventListener("animationend", () => bird.remove(), { once: true });
+  scheduleSwallow();
+}
+
+function scheduleSwallow(initial = false) {
+  scheduleAtmosphere(spawnSwallow, initial ? 2600 : 22000, initial ? 6400 : 46000);
+}
+
+function spawnShootingStar() {
+  const root = atmosphereRoot();
+  if (!root || !document.body.classList.contains("theme-dark") || atmospherePaused || respectsReducedMotion()) {
+    scheduleShootingStar();
+    return;
+  }
+  const star = document.createElement("span");
+  star.className = "fx-shooting-star";
+  star.style.setProperty("--star-x", `${52 + Math.random() * 32}vw`);
+  star.style.setProperty("--star-y", `${9 + Math.random() * 18}vh`);
+  star.style.setProperty("--star-duration", `${1.05 + Math.random() * 0.5}s`);
+  root.appendChild(star);
+  star.addEventListener("animationend", () => star.remove(), { once: true });
+  scheduleShootingStar();
+}
+
+function scheduleShootingStar(initial = false) {
+  scheduleAtmosphere(spawnShootingStar, initial ? 3400 : 26000, initial ? 9000 : 52000);
+}
+
+function updateAtmosphereForTheme() {
+  clearAtmosphereTimers();
+  if (atmospherePaused || respectsReducedMotion()) {
+    document.body.classList.add("fx-paused");
+    return;
+  }
+  document.body.classList.remove("fx-paused");
+  if (document.body.classList.contains("theme-dark")) scheduleShootingStar(true);
+  else scheduleSwallow(true);
+}
+
+function pauseFXWhenHidden() {
+  document.addEventListener("visibilitychange", () => {
+    atmospherePaused = document.hidden;
+    document.body.classList.toggle("fx-paused", atmospherePaused);
+    if (atmospherePaused) {
+      clearAtmosphereTimers();
+      document.querySelectorAll(".fx-swallow, .fx-shooting-star").forEach((item) => item.remove());
+    } else {
+      updateAtmosphereForTheme();
+    }
+  });
+}
+
+function initAtmosphereFX() {
+  const root = atmosphereRoot();
+  if (!root) return;
+  const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  motionQuery.addEventListener?.("change", updateAtmosphereForTheme);
+  pauseFXWhenHidden();
+  updateAtmosphereForTheme();
+}
+
+function initHeroMicroParallax() {
+  const topbar = document.querySelector(".topbar");
+  if (!topbar || respectsReducedMotion()) return;
+  const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  if (!canHover) return;
+  window.addEventListener("pointermove", (event) => {
+    const x = ((event.clientX / window.innerWidth) - 0.5) * 8;
+    const y = ((event.clientY / window.innerHeight) - 0.5) * 5;
+    topbar.style.setProperty("--hero-parallax-x", `${x.toFixed(2)}px`);
+    topbar.style.setProperty("--hero-parallax-y", `${y.toFixed(2)}px`);
+  }, { passive: true });
+}
+
+function initScrollAtmosphere() {
+  const update = () => {
+    document.body.classList.toggle("is-scrolled", window.scrollY > 18);
+  };
+  update();
+  window.addEventListener("scroll", update, { passive: true });
+}
+
+function initSearchPlaceholderCycle() {
+  const input = document.querySelector("#searchInput");
+  if (!input) return;
+  let index = 0;
+  clearInterval(searchPlaceholderTimer);
+  searchPlaceholderTimer = window.setInterval(() => {
+    if (document.hidden || input.value || document.activeElement === input) return;
+    index = (index + 1) % searchPlaceholders.length;
+    input.setAttribute("placeholder", searchPlaceholders[index]);
+  }, 7200);
 }
 
 function stampCityArtifacts(scope = document) {
@@ -1873,10 +2193,20 @@ function handleAction(button) {
     return;
   }
 
+  if (action === "install-app") {
+    if (!installPromptEvent) {
+      showToast("Installa MyAvezzano dal menu del browser o aggiungila alla schermata Home.", "success");
+      return;
+    }
+    installPromptEvent.prompt();
+    installPromptEvent.userChoice.finally(() => {
+      installPromptEvent = null;
+    });
+    return;
+  }
+
   if (action === "notifications") {
-    showToast("Hai 3 notifiche demo: 1 evento stasera, 1 coupon in scadenza, 1 nuova apertura.");
-    switchView("profile");
-    renderProfilePanel("settings");
+    toggleNotificationMenu();
     return;
   }
 
@@ -1889,6 +2219,7 @@ function handleAction(button) {
 
   if (action === "create-reminder") {
     const total = addDemoItem("reminders", { title: "Reminder eventi di stasera" });
+    renderDayPlan();
     showToast(`Reminder attivato. Totale reminder: ${total}.`, "success");
     switchView("profile");
     renderProfilePanel("events");
@@ -1928,6 +2259,8 @@ function handleAction(button) {
     const key = type.includes("Sconto") || type.includes("Shopping") ? "coupons" : "saved";
     addDemoItem(key, { title, type });
     button.textContent = "Salvato";
+    button.classList.add("is-saved");
+    renderDayPlan();
     showToast(`Salvato: ${title}.`, "success");
     return;
   }
@@ -1951,6 +2284,7 @@ function handleAction(button) {
   if (action === "book-event") {
     const total = addDemoItem("events", { title: button.dataset.title });
     button.textContent = "Prenotato";
+    renderDayPlan();
     showToast(`Evento prenotato. Totale eventi salvati: ${total}.`, "success");
     return;
   }
@@ -1958,6 +2292,8 @@ function handleAction(button) {
   if (action === "save-event") {
     addDemoItem("events", { title: button.dataset.title });
     button.textContent = "Salvato";
+    button.classList.add("is-saved");
+    renderDayPlan();
     showToast(`Evento salvato: ${button.dataset.title}.`, "success");
     return;
   }
@@ -2138,7 +2474,7 @@ function applySearchFilter() {
     searchStatus.classList.toggle("is-empty", Boolean(term) && activeResults.length === 0);
     searchStatus.textContent = activeResults.length
       ? `${activeResults.length} risultati per "${searchInput.value.trim()}"`
-      : `Nessun risultato per "${searchInput.value.trim()}"`;
+      : `Non ho trovato nulla per "${searchInput.value.trim()}". Prova con una categoria o un luogo vicino.`;
   }
 
   if (term && document.querySelector("#feedView").classList.contains("active")) {
@@ -2151,6 +2487,17 @@ function applySearchFilter() {
 
 document.querySelector("#searchInput").addEventListener("input", () => {
   applySearchFilter();
+});
+
+document.addEventListener("click", (event) => {
+  const quickSearch = event.target.closest("[data-search-term]");
+  if (!quickSearch) return;
+  const searchInput = document.querySelector("#searchInput");
+  searchInput.value = quickSearch.dataset.searchTerm;
+  if (!document.querySelector("#feedView").classList.contains("active")) switchView("feed");
+  applySearchFilter();
+  searchInput.focus();
+  showToast(`Ricerca rapida: ${quickSearch.dataset.searchTerm}`, "success");
 });
 
 document.querySelector("#clearSearch").addEventListener("click", () => {
@@ -2599,6 +2946,34 @@ openSignupButtons.forEach((button) => {
     }
     openSignup();
   });
+});
+
+document.querySelector("#topProfileStatus")?.addEventListener("click", () => {
+  if (getStoredUser()) {
+    switchView("profile");
+    renderProfilePanel("settings");
+    closeNotificationMenu();
+    return;
+  }
+  openSignup("login");
+});
+
+document.querySelector("#closeNotificationMenu")?.addEventListener("click", closeNotificationMenu);
+
+document.querySelector("#notificationMenu")?.addEventListener("click", (event) => {
+  const item = event.target.closest("[data-notification-open]");
+  if (!item) return;
+  closeNotificationMenu();
+  if (item.classList.contains("coupon")) switchView("coupons");
+  else if (item.classList.contains("event")) switchView("events");
+  else switchView(getStoredUser() ? "profile" : "feed");
+});
+
+document.addEventListener("click", (event) => {
+  const menu = document.querySelector("#notificationMenu");
+  if (!menu || menu.hasAttribute("hidden")) return;
+  if (event.target.closest("#notificationMenu") || event.target.closest("#notificationButton")) return;
+  closeNotificationMenu();
 });
 
 document.querySelector("#closeSignup").addEventListener("click", () => {
@@ -3077,6 +3452,10 @@ function initWebglAura() {
 
 async function bootApp() {
   applyTheme();
+  initAtmosphereFX();
+  initHeroMicroParallax();
+  initScrollAtmosphere();
+  initSearchPlaceholderCycle();
   initWebglAura();
   await seedAdminUser();
   render();
@@ -3101,6 +3480,15 @@ async function bootApp() {
       });
     });
   }
+
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    installPromptEvent = event;
+    showToast("MyAvezzano puo essere installata come app.", "success");
+  });
+
+  window.addEventListener("offline", () => showToast("Sei offline: uso dati salvati e funzioni locali.", "error"));
+  window.addEventListener("online", () => showToast("Connessione ripristinata.", "success"));
 }
 
 document.querySelector("#themeToggle")?.addEventListener("click", toggleTheme);
